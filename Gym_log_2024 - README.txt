@@ -7,7 +7,7 @@ This is my first Case study to show basic data analysis skills.
 
 Goals:
 Clean collected data and prepare it for analysis.
-Excercise Python for data analysis and learn to use Python libraries such as Pandas, Matplotlib, Seaborn, Numpy, etc.
+Exercise Python for data analysis and learn to use Python libraries such as Pandas, Matplotlib, Seaborn, Numpy, etc.
 Gain insight to my workout routine, body transformations and daily habits.
 
 Output:
@@ -25,24 +25,26 @@ Pandas, matplotlib, seaborn, numpy
 Git
 VS Code
 
-Github repository: www.github.com/repository/XYXYXYXYXYXYX
+Github repository: https://github.com/mikloskoj/Gym_log_2024
 
 Analysis specifics?
 //// Part 1
-1. Compare calorie comsumption and body macros.
-2. Calculate and vizualize BMI
+1. Compare calorie consumption and body macros.
+2. Calculate and visualize BMI
 
 //// Part 2
-1. Workout consitency. Days, duration, total sets.. etc. (Maybe heatmap or some similar visual)
-2. Most favorite excercise
-3. Least favorite excercise
-
-4. Weight load across few selected excercises.
+1. Workout consistency. Days, duration, total sets.. etc. (Maybe heatmap or some similar visual)
+2. Most favorite exercise.
+3. Least favorite exercise.
+4. Longest workout duration/sets.
+5. Shortest workout duration/sets.
+6. Number of sets per muscle group.
+7. Weight load progress across few selected exercises.
 - Dip assist
 - Bench press
 - Pec fly
 - Lex extension
 - Mid row - one arm
 
-5. Most worked muscle group (total sets table).
-6. Number of push-ups per workout session.
+8. Most worked muscle group (total sets table).
+9. Number of push-ups per workout session.
