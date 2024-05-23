@@ -46,5 +46,7 @@ Analysis specifics?
 - Lex extension
 - Mid row - one arm
 
-8. Most worked muscle group (total sets table).
-9. Number of push-ups per workout session.
+8. Check how reps per sets has changed in correlation to weight.
+
+9. Most worked muscle group (total sets table).
+10. Number of push-ups per workout session.

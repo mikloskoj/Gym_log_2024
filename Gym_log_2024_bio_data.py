@@ -2,20 +2,26 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-def bio_data():
+# Get the directory where the Python script is located
+script_directory = os.path.dirname(os.path.abspath(__file__))
 
-    # Get the directory where the Python script is located
-    script_directory = os.path.dirname(os.path.abspath(__file__))
+# Path to the CSV file (relative to the script directory)
+csv_file_name = 'gym_log_Q1_2024 - bio_data.csv'
+file_path = os.path.join(script_directory, csv_file_name)
 
-    # Path to the CSV file (relative to the script directory)
-    csv_file_name = 'gym_log_Q1_2024 - bio_data.csv'
-    file_path = os.path.join(script_directory, csv_file_name)
+try:
+    # Read the CSV file
+    bio_data_df = pd.read_csv(file_path, sep=';', index_col=0)
+except FileNotFoundError:
+    print(f"Error: The file {csv_file_name} was not found in the directory {script_directory}.")
+except pd.errors.ParserError:
+    print("Error: There was an issue parsing the CSV file.")
+except Exception as e:
+    print(f"An unexpected error occurred: {e}")
+
+def bio_plot(df):
 
     try:
-
-        # Read the CSV file
-        df = pd.read_csv(file_path, sep=';', index_col=0)
-
         # Convert columns to numeric, coercing errors
         df['Wgt (kg)'] = pd.to_numeric(df['Wgt (kg)'], errors='coerce')
         df['Waist (cm)'] = pd.to_numeric(df['Waist (cm)'], errors='coerce')
@@ -74,29 +80,16 @@ def bio_data():
         )
         fig.text(0.1, 0.45, description2, wrap=True, horizontalalignment='left', fontsize=7, color='grey')
 
-        # Provide options to the user
-        print('For linechart press 1, to save plot as PNG press 2')
+        print('Displaying the plot...')
+        plt.show()
 
-        q = input('Your choice: ')
-        if q == '1':
-            print('Displaying the plot...')
-            plt.show()
-        elif q == '2':
-            # Construct the save path
-            save_path = os.path.join(script_directory, 'weight_waist_kcal_plot.png')
-            fig.savefig(save_path)
-            print(f'Plot saved as PNG to {save_path}')
-        else:
-            print('-------------------------------------------\n'
-                'You did not select anything from the menu.\n'
-                'End of program... Goodbye and thank you!\n'
-                '-------------------------------------------')
-            
-    except FileNotFoundError:
-        print(f"Error: The file {csv_file_name} was not found in the directory {script_directory}.")
-    except pd.errors.ParserError:
-        print("Error: There was an issue parsing the CSV file.")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-        
-bio_data()
+
+
+def bmi_plot(df):
+    print(df.head())
+
+# Pass the loaded DataFrame to the function
+bio_plot(bio_data_df)
+bmi_plot(bio_data_df)
