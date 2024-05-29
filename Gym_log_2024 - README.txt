@@ -30,6 +30,8 @@ Github repository: https://github.com/mikloskoj/Gym_log_2024
 Analysis specifics?
 //// Part 1
 1. Compare calorie consumption and body macros.
+- vizualize.
+- calculate correlation between caloric intake and body weight/waist.
 2. Calculate and visualize BMI
 
 //// Part 2
