@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import numpy as np
 
 # Get the directory where the Python script is located
 script_directory = os.path.dirname(os.path.abspath(__file__))
@@ -12,6 +13,17 @@ file_path = os.path.join(script_directory, csv_file_name)
 try:
     # Read the CSV file
     bio_data_df = pd.read_csv(file_path, sep=';', index_col=0)
+    bio_data_df = bio_data_df.applymap(lambda x: str(x).replace(',', '.') if isinstance(x, str) else x)
+    
+    # Convert columns to numeric, coercing errors
+    bio_data_df['Wgt (kg)'] = pd.to_numeric(bio_data_df['Wgt (kg)'], errors='coerce')
+    bio_data_df['Waist (cm)'] = pd.to_numeric(bio_data_df['Waist (cm)'], errors='coerce')
+    bio_data_df['kcal Total'] = pd.to_numeric(bio_data_df['kcal Total'], errors='coerce')
+    bio_data_df['kcal'] = pd.to_numeric(bio_data_df['kcal'], errors='coerce')
+    
+    # Convert index to datetime for better handling of date ticks
+    bio_data_df.index = pd.to_datetime(bio_data_df.index, dayfirst=True)
+
 except FileNotFoundError:
     print(f"Error: The file {csv_file_name} was not found in the directory {script_directory}.")
 except pd.errors.ParserError:
@@ -19,30 +31,31 @@ except pd.errors.ParserError:
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
 
+
+
+def moving_average(series, window_size):
+    '''Calculating moving_average'''
+    return series.rolling(window=window_size, min_periods=1).mean()
+
+
 def bio_plot(df):
-
     try:
-        # Convert columns to numeric, coercing errors
-        df['Wgt (kg)'] = pd.to_numeric(df['Wgt (kg)'], errors='coerce')
-        df['Waist (cm)'] = pd.to_numeric(df['Waist (cm)'], errors='coerce')
-        df['kcal Total'] = pd.to_numeric(df['kcal Total'], errors='coerce')
-        df['kcal'] = pd.to_numeric(df['kcal'], errors='coerce')
-
-        # Convert index to datetime for better handling of date ticks
-        df.index = pd.to_datetime(df.index, dayfirst=True)
-
         # Create a figure and subplots
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+
+        # Apply moving average to smooth the data
+        weight_smoothed = moving_average(df['Wgt (kg)'], window_size=5)
+        waist_smoothed = moving_average(df['Waist (cm)'], window_size=5)
 
         # Plot weight and waist measurements on the first subplot
-        ax1.plot(df['Wgt (kg)'], label='Weight (kg)')
-        ax1.plot(df['Waist (cm)'], label='Waist (cm)')
+        ax1.plot(df.index, weight_smoothed, label='Weight (kg)', color='#0b5193')
+        ax1.plot(df.index, waist_smoothed, label='Waist (cm)', color='#930b0b')
         ax1.grid()
         ax1.legend(loc='upper left')
         ax1.set_xticks(df.index[::7])
-        ax1.tick_params(axis='x', rotation=45, labelsize=5)
-        ax1.tick_params(axis='y', labelsize=5)
-        ax1.set_title('Weight and Waist Measurements Over Time')
+        ax1.tick_params(axis='x', rotation=45, labelsize=7)
+        ax1.tick_params(axis='y', labelsize=7)
+        ax1.set_title('Weight and Waist Measurements Over Time  (moving_average)')
 
         # Highlight the dates with 'Creatine' == 1 on the first subplot
         creatine_dates = df[df['Creatine'] == 1].index
@@ -51,17 +64,17 @@ def bio_plot(df):
 
         # Add a proxy artist for the creatine marker to the legend
         creatine_proxy = plt.Line2D([0], [0], color='lightgrey', linestyle='--', alpha=0.5, label='Creatine')
-        ax1.legend(handles=[plt.Line2D([], [], color='blue', label='Weight (kg)'),
-                            plt.Line2D([], [], color='orange', label='Waist (cm)'),
+        ax1.legend(handles=[plt.Line2D([], [], color='#0b5193', label='Weight (kg)'),
+                            plt.Line2D([], [], color='#930b0b', label='Waist (cm)'),
                             creatine_proxy], loc='lower left', fontsize=8)
 
         # Adding horizontal lines at 1800 and 2000
-        ax2.axhline(y=1800, color='darkgreen', linestyle='--', linewidth=1, label='1800 kcal')
-        ax2.axhline(y=2000, color='darkgreen', linestyle='--', linewidth=1, label='2000 kcal')
+        ax2.axhline(y=1800, color='#587d21', linestyle=':', linewidth=1.5, label='Basal metabolic rate')
+        ax2.axhline(y=2000, color='#587d21', linestyle=':', linewidth=1.5)
 
         # Plot kcal Total and kcal as bar charts on the second subplot
-        ax2.bar(df.index, df['kcal Total'], label='kcal Total', alpha=0.7)
-        ax2.bar(df.index, df['kcal'], label='kcal Target', alpha=0.7)
+        ax2.bar(df.index, df['kcal Total'], label='Total kcal consumed', alpha=0.7, color='#f2ba02')
+        ax2.bar(df.index, df['kcal'], label='Total kcal consumed (After excercise)', alpha=0.7, color='#b56b36')
         ax2.grid()
         ax2.legend(loc='upper left', fontsize=8)
         ax2.set_xticks(df.index[::7])
@@ -70,7 +83,7 @@ def bio_plot(df):
         ax2.set_title('Caloric Intake Over Time')
 
         # Adjust the layout to make room for rotated labels
-        fig.tight_layout(rect=[0, 0.8, 1, 0.95])  # Adjust layout to make room for the description
+        # fig.tight_layout(rect=[0, 0.8, 1, 0.95])  # Adjust layout to make room for the description
         fig.subplots_adjust(hspace=1.0)
 
         description2 = (
@@ -86,10 +99,9 @@ def bio_plot(df):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
-
 def bmi_plot(df):
     print(df.head())
 
-# Pass the loaded DataFrame to the function
+# Pass the cleaned DataFrame to the function
 bio_plot(bio_data_df)
 bmi_plot(bio_data_df)
