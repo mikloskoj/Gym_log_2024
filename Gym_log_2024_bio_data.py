@@ -13,7 +13,7 @@ file_path = os.path.join(script_directory, csv_file_name)
 try:
     # Read the CSV file
     bio_data_df = pd.read_csv(file_path, sep=';', index_col=0)
-    bio_data_df = bio_data_df.applymap(lambda x: str(x).replace(',', '.') if isinstance(x, str) else x)
+    bio_data_df = bio_data_df.map(lambda x: str(x).replace(',', '.') if isinstance(x, str) else x)
     
     # Convert columns to numeric, coercing errors
     bio_data_df['Wgt (kg)'] = pd.to_numeric(bio_data_df['Wgt (kg)'], errors='coerce')
@@ -41,46 +41,46 @@ def moving_average(series, window_size):
 def bio_plot(df):
     try:
         # Create a figure and subplots
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+        fig, (plt1, plt2) = plt.subplots(2, 1, figsize=(10, 8))
 
         # Apply moving average to smooth the data
         weight_smoothed = moving_average(df['Wgt (kg)'], window_size=5)
         waist_smoothed = moving_average(df['Waist (cm)'], window_size=5)
 
         # Plot weight and waist measurements on the first subplot
-        ax1.plot(df.index, weight_smoothed, label='Weight (kg)', color='#0b5193')
-        ax1.plot(df.index, waist_smoothed, label='Waist (cm)', color='#930b0b')
-        ax1.grid()
-        ax1.legend(loc='upper left')
-        ax1.set_xticks(df.index[::7])
-        ax1.tick_params(axis='x', rotation=45, labelsize=7)
-        ax1.tick_params(axis='y', labelsize=7)
-        ax1.set_title('Weight and Waist Measurements Over Time  (moving_average)')
+        plt1.plot(df.index, weight_smoothed, label='Weight (kg)', color='#0b5193')
+        plt1.plot(df.index, waist_smoothed, label='Waist (cm)', color='#930b0b')
+        plt1.grid()
+        plt1.legend(loc='upper left')
+        plt1.set_xticks(df.index[::7])
+        plt1.tick_params(axis='x', rotation=45, labelsize=7)
+        plt1.tick_params(axis='y', labelsize=7)
+        plt1.set_title('Weight and Waist Measurements Over Time  (moving_average)')
 
         # Highlight the dates with 'Creatine' == 1 on the first subplot
         creatine_dates = df[df['Creatine'] == 1].index
         for date in creatine_dates:
-            ax1.axvline(x=date, color='lightgrey', linestyle='--', alpha=0.5)
+            plt1.axvline(x=date, color='lightgrey', linestyle='--', alpha=0.5)
 
         # Add a proxy artist for the creatine marker to the legend
         creatine_proxy = plt.Line2D([0], [0], color='lightgrey', linestyle='--', alpha=0.5, label='Creatine')
-        ax1.legend(handles=[plt.Line2D([], [], color='#0b5193', label='Weight (kg)'),
+        plt1.legend(handles=[plt.Line2D([], [], color='#0b5193', label='Weight (kg)'),
                             plt.Line2D([], [], color='#930b0b', label='Waist (cm)'),
                             creatine_proxy], loc='lower left', fontsize=8)
 
         # Adding horizontal lines at 1800 and 2000
-        ax2.axhline(y=1800, color='#587d21', linestyle=':', linewidth=1.5, label='Basal metabolic rate')
-        ax2.axhline(y=2000, color='#587d21', linestyle=':', linewidth=1.5)
+        plt2.axhline(y=1750, color='#9a1d04', linestyle=':', linewidth=1.5, label='Basal metabolic rate - Caloric target')
+        plt2.axhline(y=1950, color='#9a1d04', linestyle=':', linewidth=1.5)
 
         # Plot kcal Total and kcal as bar charts on the second subplot
-        ax2.bar(df.index, df['kcal Total'], label='Total kcal consumed', alpha=0.7, color='#f2ba02')
-        ax2.bar(df.index, df['kcal'], label='Total kcal consumed (After excercise)', alpha=0.7, color='#b56b36')
-        ax2.grid()
-        ax2.legend(loc='upper left', fontsize=8)
-        ax2.set_xticks(df.index[::7])
-        ax2.tick_params(axis='x', rotation=45, labelsize=5)
-        ax2.tick_params(axis='y', labelsize=5)
-        ax2.set_title('Caloric Intake Over Time')
+        plt2.bar(df.index, df['kcal Total'], label='Total kcal consumed', alpha=0.7, color='#f2ba02')
+        plt2.bar(df.index, df['kcal'], label='Total kcal consumed (After excercise)', alpha=0.7, color='#2f6624')
+        plt2.grid()
+        plt2.legend(loc='upper left', fontsize=8)
+        plt2.set_xticks(df.index[::7])
+        plt2.tick_params(axis='x', rotation=45, labelsize=5)
+        plt2.tick_params(axis='y', labelsize=5)
+        plt2.set_title('Caloric Intake Over Time')
 
         # Adjust the layout to make room for rotated labels
         # fig.tight_layout(rect=[0, 0.8, 1, 0.95])  # Adjust layout to make room for the description
