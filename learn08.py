@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
-file_path = r'C:\Users\jmiklosk\OneDrive - DPDHL\Desktop\Pracovní DHL\SuperUser\DATA\Gym_log_2024 temporary\gym_log_Q1_2024 - workout data.csv'
+file_path = r'C:\Users\janmi\Documents\VS Code\Gym_log_2024\gym_log_Q1_2024 - workout data.csv'
 body_weight = 79
 selected_exercises = ('Kneeling dip', 'Bench press', 'Chest press', 'Prone leg curl', 'Lat pulldown', 'Bicep curl')
 
@@ -58,7 +58,7 @@ def total_volumes(ax, df, body_weight, selected_exercises) -> None:
     grouped_df = filtered_df.groupby(['Exercise name'])[['Sets', 'Reps', 'Weight', 'Reps_times_Sets', 'total_weight']].sum()
     grouped_df = grouped_df.sort_values('total_weight', ascending=False)
     
-    sns.barplot(data=grouped_df.reset_index(), x='Exercise name', y='total_weight',hue='total_weight' , ax=ax, palette='YlOrRd_r')
+    sns.barplot(data=grouped_df.reset_index(), x='Exercise name', y='total_weight',hue='total_weight' , ax=ax, palette='YlOrRd')
     ax.set_xlabel('Exercise')
     ax.set_ylabel('Total Weight')
     ax.set_title('Total Weight Lifted Over Time', fontweight='bold')
