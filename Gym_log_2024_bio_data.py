@@ -2,8 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import numpy as np
-# test
-
 
 
 # Get the directory where the Python script is located
@@ -13,27 +11,35 @@ script_directory = os.path.dirname(os.path.abspath(__file__))
 csv_file_name = 'gym_log_Q1_2024 - bio_data.csv'
 file_path = os.path.join(script_directory, csv_file_name)
 
-try:
-    # Read the CSV file
-    bio_data_df = pd.read_csv(file_path, sep=';', index_col=0)
-    bio_data_df = bio_data_df.map(lambda x: str(x).replace(',', '.') if isinstance(x, str) else x)
-    
-    # Convert columns to numeric, coercing errors
-    bio_data_df['Wgt (kg)'] = pd.to_numeric(bio_data_df['Wgt (kg)'], errors='coerce')
-    bio_data_df['Waist (cm)'] = pd.to_numeric(bio_data_df['Waist (cm)'], errors='coerce')
-    bio_data_df['kcal Total'] = pd.to_numeric(bio_data_df['kcal Total'], errors='coerce')
-    bio_data_df['kcal'] = pd.to_numeric(bio_data_df['kcal'], errors='coerce')
-    
-    # Convert index to datetime for better handling of date ticks
-    bio_data_df.index = pd.to_datetime(bio_data_df.index, dayfirst=True)
+def load_and_process_gym_log(filepath: str) -> pd.DataFrame:
+   
+    try:
+        # Read the CSV file
+        bio_data_df = pd.read_csv(file_path, sep=';', index_col=0)
+        bio_data_df = bio_data_df.map(lambda x: str(x).replace(',', '.') if isinstance(x, str) else x)
+        
+        # Convert columns to numeric, coercing errors
+        bio_data_df['Wgt (kg)'] = pd.to_numeric(bio_data_df['Wgt (kg)'], errors='coerce')
+        bio_data_df['Waist (cm)'] = pd.to_numeric(bio_data_df['Waist (cm)'], errors='coerce')
+        bio_data_df['kcal Total'] = pd.to_numeric(bio_data_df['kcal Total'], errors='coerce')
+        bio_data_df['kcal'] = pd.to_numeric(bio_data_df['kcal'], errors='coerce')
+        
+        # Convert index to datetime for better handling of date ticks
+        bio_data_df.index = pd.to_datetime(bio_data_df.index, dayfirst=True)
 
-except FileNotFoundError:
-    print(f"Error: The file {csv_file_name} was not found in the directory {script_directory}.")
-except pd.errors.ParserError:
-    print("Error: There was an issue parsing the CSV file.")
-except Exception as e:
-    print(f"An unexpected error occurred: {e}")
 
+    except FileNotFoundError:
+        print(f"Error: The file {csv_file_name} was not found in the directory {script_directory}.")
+    except pd.errors.ParserError:
+        print("Error: There was an issue parsing the CSV file.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+    return bio_data_df
+
+
+def data_transformation(df) -> None:
+    print(f'Transforming the data...')
 
 
 def moving_average(series, window_size):
@@ -41,7 +47,7 @@ def moving_average(series, window_size):
     return series.rolling(window=window_size, min_periods=1).mean()
 
 
-def bio_plot(df):
+def bio_plot(df) -> None:
     try:
         # Create a figure and subplots
         fig, (plt1, plt2) = plt.subplots(2, 1, figsize=(10, 8))
@@ -102,9 +108,15 @@ def bio_plot(df):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
 
-def bmi_plot(df):
+
+def bmi_plot(df: pd.DataFrame) -> None:
     print(df.head())
 
-# Pass the cleaned DataFrame to the function
-bio_plot(bio_data_df)
-bmi_plot(bio_data_df)
+
+def main() -> None:
+    # Pass the cleaned DataFrame to the function
+    load_and_process_gym_log(file_path)
+    bio_plot(pd.DataFrame)
+    bmi_plot(pd.DataFrame)
+
+main()
