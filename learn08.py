@@ -4,6 +4,9 @@ import seaborn as sns
 
 file_path = r'C:\Users\janmi\Documents\VS Code\Gym_log_2024\gym_log_Q1_2024 - workout data.csv'
 body_weight = 79
+sns.set_style("white")
+border_color = 'lightgrey'
+background_color = '#fdfcfc'
 
 # outliers = ['Plank']
 selected_exercises = ('Kneeling dip', 'Bench press', 'Chest press', 'Prone leg curl', 'Lat pulldown', 'Bicep curl')
@@ -18,7 +21,6 @@ def total_volumes(ax1, ax2, df, body_weight, selected_exercises, window=8) -> No
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce', dayfirst=True)
     
     # Filter the dataframe based on muscle group and selected exercises
-    # filtered_df = df[(df['Muscle group'] != 'Cardio') & (df['Muscle group'] != 'Walk')].copy()
     filtered_df = df[(df['Muscle group'] != 'Cardio') & (df['Muscle group'] != 'Walk') & (df['Exercise name'].isin(selected_exercises))].copy()
     
     # Replace commas in 'Weight' column and convert to numeric
@@ -38,13 +40,13 @@ def total_volumes(ax1, ax2, df, body_weight, selected_exercises, window=8) -> No
     grouped_df_total = filtered_df.groupby(['Exercise name'])[['Sets', 'Reps', 'Weight', 'total_reps', 'total_weight']].sum()
     grouped_df_total = grouped_df_total.sort_values('total_reps', ascending=False)
 
-    # Keep only the top 3 exercises
+    # Keep only the top 5 exercises
     top_exercises = grouped_df_total.head(5)
 
-    # Filter the main dataframe to keep only the top 3 exercises
+    # Filter the main dataframe to keep only the top 5 exercises
     filtered_df = filtered_df[filtered_df['Exercise name'].isin(top_exercises.index)]
 
-    # Update grouped_df with only the top 3 exercises
+    # Update grouped_df with only the top 5 exercises
     grouped_df = filtered_df.groupby(['Date', 'Exercise name'])[['Sets', 'Reps', 'Weight', 'total_reps', 'total_weight']].sum().reset_index()
 
     # Apply moving average
@@ -67,6 +69,9 @@ def total_volumes(ax1, ax2, df, body_weight, selected_exercises, window=8) -> No
     )
 
     ax1.tick_params(axis='x', rotation=45)
+    ax1.set_xlabel('')
+    ax1.set_ylabel('Total Reps')
+    ax1.set_title('Total Reps Over Time', fontweight='bold')
 
     # Plot bar plot
     sns.barplot(
@@ -77,7 +82,7 @@ def total_volumes(ax1, ax2, df, body_weight, selected_exercises, window=8) -> No
         palette=color_mapping
     )
 
-    ax2.set_xlabel('Exercise')
+    ax2.set_xlabel('')
     ax2.set_ylabel('Total Reps')
     ax2.set_title('Total Reps Lifted Over Time', fontweight='bold')
     
@@ -87,8 +92,11 @@ def total_volumes(ax1, ax2, df, body_weight, selected_exercises, window=8) -> No
     table.auto_set_font_size(False)
     table.set_fontsize(8)
     table.scale(1, 0.5)
-    
+
+    # Set table borders
     for key, cell in table.get_celld().items():
+        cell.set_edgecolor(border_color)
+        cell.set_linewidth(0.5)
         if key[0] == 0:
             cell.set_text_props(weight='bold', color='white', fontsize=6)
             cell.set_facecolor('#40466e')
@@ -96,6 +104,12 @@ def total_volumes(ax1, ax2, df, body_weight, selected_exercises, window=8) -> No
             cell.set_facecolor('#f2f2f2')
     
     plt.subplots_adjust(left=0.1, bottom=0.2)
+
+    # Customize the plot backgrounds and spines
+    for ax in [ax1, ax2]:
+        ax.set_facecolor(background_color)
+        for spine in ax.spines.values():
+            spine.set_edgecolor(border_color)
 
 def main() -> None:
     try:

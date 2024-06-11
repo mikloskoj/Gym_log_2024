@@ -19,8 +19,6 @@ def moving_average(series, window_size):
 
 def body_values(df) -> None:
 
-    print(df.to_string())
-
     # Apply moving average to smooth the data
     df['Wgt (kg)'] = moving_average(df['Wgt (kg)'], window_size=2)
     df['Waist (cm)'] = moving_average(df['Waist (cm)'], window_size=2)
