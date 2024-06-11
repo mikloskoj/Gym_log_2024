@@ -109,14 +109,10 @@ def bio_plot(df) -> None:
         print(f"An unexpected error occurred: {e}")
 
 
-def bmi_plot(df: pd.DataFrame) -> None:
-    print(df.head())
-
 
 def main() -> None:
     # Pass the cleaned DataFrame to the function
     load_and_process_gym_log(file_path)
     bio_plot(pd.DataFrame)
-    bmi_plot(pd.DataFrame)
 
 main()
