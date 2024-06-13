@@ -7,10 +7,11 @@ import matplotlib.gridspec as gridspec
 file_path = r'C:\Users\janmi\Documents\VS Code\Gym_log_2024\gym_log_Q1_2024 - workout data.csv'
 body_weight = 79
 sns.set_style("white")
+
 border_color = 'lightgrey'
 background_color = '#fdfcfc'
 
-def daily_view(df, window=8) -> None:
+def sets_view(df, window=8) -> None:
     df_weekly = df.groupby(['Week'])[['Sets']].sum()
     df_monthly = df.groupby(['Month'])[['Sets']].sum()
     df_daily = df.groupby(['Date'])[['Sets']].sum()
@@ -31,8 +32,11 @@ def daily_view(df, window=8) -> None:
         palette='YlOrRd',
         ax=ax0
     )
-    ax0.set_title('Monthly Sets', fontweight='bold')
+    ax0.set_title('Monthly Sets', fontweight='bold', fontsize=12)
     ax0.legend().remove()
+    ax0.set_xlabel('Month',fontsize=6)
+    ax0.tick_params(axis='x', labelsize=8)
+    ax0.tick_params(axis='y', labelsize=8)
 
     sns.barplot(
         data=df_weekly.reset_index(),
@@ -42,9 +46,12 @@ def daily_view(df, window=8) -> None:
         palette='YlOrRd',
         ax=ax1
     )
-    ax1.set_title('Weekly Sets', fontweight='bold')
+    ax1.set_title('Weekly Sets', fontweight='bold', fontsize=12)
     ax1.set_ylabel('')
+    ax1.set_xlabel('Week',fontsize=6)
     ax1.legend().remove()
+    ax1.tick_params(axis='x', labelsize=8)
+    ax1.tick_params(axis='y', labelsize=8)
 
     sns.barplot(
         data=df_daily.reset_index(),
@@ -54,8 +61,11 @@ def daily_view(df, window=8) -> None:
         palette='YlOrRd',
         ax=ax2
     )
-    ax2.set_title('Daily Sets', fontweight='bold')
+    ax2.set_title('Daily Sets', fontweight='bold', fontsize=12)
     ax2.set_ylabel('')
+    ax2.set_xlabel('Day',fontsize=6)
+    ax2.tick_params(axis='x', labelsize=5)
+    ax2.tick_params(axis='y', labelsize=8)
 
     for ax in [ax0, ax1, ax2]:
         ax.set_facecolor(background_color)
@@ -87,7 +97,7 @@ def main() -> None:
         print(f"File not found. Details: {e}")
         return
 
-    daily_view(df)
+    sets_view(df)
 
 if __name__ == "__main__":
     main()

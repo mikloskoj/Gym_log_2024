@@ -36,44 +36,47 @@ def body_values(df) -> None:
     sns.lineplot(data=df, 
                  x='Date', 
                  y='Waist (cm)', 
-                 color='#90AACB',
+                 color='#fed976',
                  ax=ax[1])
     
     
-    ax[1].set_title('Waist Over Time', fontweight='bold', fontsize='9', loc='left')
+    ax[1].set_title('Waist Over Time', fontweight='bold', fontsize=12, loc='left')
     ax[1].set_xlabel('')
     ax[1].set_ylabel('')
     ax[1].set_xticklabels([])
+    ax[1].tick_params(axis='y', labelsize=8)
     
 
     sns.lineplot(data=df, 
                  x='Date', 
                  y='Wgt (kg)', 
-                 color='#90AACB',
+                 color='#fed976',
                  ax=ax[2])
     
 
-    ax[2].set_title('Weight Over Time', fontweight='bold', fontsize='9', loc='left')
+    ax[2].set_title('Weight Over Time', fontweight='bold', fontsize=12, loc='left')
     ax[2].set_xlabel('')
     ax[2].set_ylabel('')
     ax[2].set_xticklabels([])
+    ax[2].tick_params(axis='y', labelsize=8)
 
 
     sns.lineplot(data=df, 
                  x='Date', 
                  y='BMI', 
-                 color='#90AACB',
+                 color='#fed976',
                  ax=ax[3])
     
-    ax[3].set_title('BMI Over Time', fontweight='bold', fontsize='9', loc='left')
+    ax[3].set_title('BMI Over Time', fontweight='bold', fontsize=12, loc='left')
     ax[3].set_xlabel('')
     ax[3].set_ylabel('')
     ax[3].set_xticklabels([])
+    ax[3].tick_params(axis='y', labelsize=8)
 
 
     # Melt the DataFrame for the barplot
     df_melted = df.melt(id_vars=['Date'], value_vars=['kcal', 'kcal Total'], var_name='Type', value_name='Value')
-    custom_palette = {'kcal': '#FFB085', 'kcal Total': 'lightgrey'}
+    custom_palette = {'kcal': '#feb24c', 'kcal Total': 'lightgrey'}
     
     sns.barplot(data=df_melted, 
                 x='Date', 
@@ -82,10 +85,11 @@ def body_values(df) -> None:
                 palette=custom_palette,
                 ax=ax[4])
     
-    ax[4].set_title('Caloric Intake Over Time', fontweight='bold', fontsize='9', loc='left')
+    ax[4].set_title('Caloric Intake Over Time', fontweight='bold', fontsize=12, loc='left')
     ax[4].set_xlabel('')
     ax[4].set_ylabel('')
     ax[4].set_xticklabels([])
+    ax[4].tick_params(axis='y', labelsize=8)
     
 
 
