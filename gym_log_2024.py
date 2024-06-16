@@ -4,8 +4,8 @@ from matplotlib.lines import Line2D
 import seaborn as sns
 import matplotlib.gridspec as gridspec
 
-file_path_1 = r'C:\Users\janmi\Documents\VS Code\Gym_log_2024\gym_log_Q1_2024 - workout data.csv'
-file_path_2 = r'C:\Users\janmi\Documents\VS Code\Gym_log_2024\gym_log_Q1_2024 - bio_data.csv'
+file_path_1 = 'gym_log_Q1_2024 - workout data.csv'
+file_path_2 = 'gym_log_Q1_2024 - bio_data.csv'
 body_weight = 79
 height = 181
 sns.set_style("white")
@@ -44,10 +44,10 @@ def data_preparation(df1, df2):
 
     df1 = df1.sort_values(by='Date', ascending=True)
 
-    df2[['kcal', 'kcal Total', 'Wgt (kg)', 'Waist (cm)']] = df2[['kcal', 'kcal Total', 'Wgt (kg)', 'Waist (cm)']].astype(str).apply(lambda x: x.str.replace(',', '.'))
-    df2[['kcal', 'kcal Total', 'Wgt (kg)', 'Waist (cm)']] = df2[['kcal', 'kcal Total', 'Wgt (kg)', 'Waist (cm)']].apply(pd.to_numeric, errors='coerce')
+    df2[['kcal', 'kcal total', 'Weight', 'Waist']] = df2[['kcal', 'kcal total', 'Weight', 'Waist']].astype(str).apply(lambda x: x.str.replace(',', '.'))
+    df2[['kcal', 'kcal total', 'Weight', 'Waist']] = df2[['kcal', 'kcal total', 'Weight', 'Waist']].apply(pd.to_numeric, errors='coerce')
     df2['Date'] = pd.to_datetime(df2['Date'], format='%d.%m.%Y', dayfirst=True)
-    df2['BMI'] = df2['Wgt (kg)'] / ((height / 100) ** 2) 
+    df2['BMI'] = df2['Weight'] / ((height / 100) ** 2) 
 
 
     return df1, df2
@@ -62,21 +62,21 @@ def body_values(df2):
 
 
     # Apply moving average to smooth the data
-    df2_bv.loc[:, 'Wgt (kg)'] = df2_bv['Wgt (kg)'].rolling(window=1).mean()
-    df2_bv.loc[:, 'Waist (cm)'] = df2_bv['Waist (cm)'].rolling(window=1).mean()
+    df2_bv.loc[:, 'Weight'] = df2_bv['Weight'].rolling(window=1).mean()
+    df2_bv.loc[:, 'Waist'] = df2_bv['Waist'].rolling(window=1).mean()
     df2_bv.loc[:, 'BMI'] = df2_bv['BMI'].rolling(window=1).mean()
 
     # Create a figure and axis
     fig, ax = plt.subplots(4, 1, figsize=(10, 8))
 
-    sns.lineplot(data=df2_bv, x='Date', y='Waist (cm)', color=line_color, ax=ax[0])
+    sns.lineplot(data=df2_bv, x='Date', y='Waist', color=line_color, ax=ax[0])
     ax[0].set_title('Waist Over Time', fontweight='bold', fontsize=12, loc='left')
     ax[0].set_xlabel('')
     ax[0].set_ylabel('')
     ax[0].set_xticklabels([])
     ax[0].tick_params(axis='y', labelsize=8)
 
-    sns.lineplot(data=df2_bv, x='Date', y='Wgt (kg)', color=line_color, ax=ax[1])
+    sns.lineplot(data=df2_bv, x='Date', y='Weight', color=line_color, ax=ax[1])
     ax[1].set_title('Weight Over Time', fontweight='bold', fontsize=12, loc='left')
     ax[1].set_xlabel('')
     ax[1].set_ylabel('')
@@ -91,8 +91,8 @@ def body_values(df2):
     ax[2].tick_params(axis='y', labelsize=8)
 
     # Melt the DataFrame for the barplot
-    df_melted = df2_bv.melt(id_vars=['Date'], value_vars=['kcal', 'kcal Total'], var_name='Type', value_name='Value')
-    custom_palette = {'kcal': line_color, 'kcal Total': 'lightgrey'}
+    df_melted = df2_bv.melt(id_vars=['Date'], value_vars=['kcal', 'kcal total'], var_name='Type', value_name='Value')
+    custom_palette = {'kcal': line_color, 'kcal total': 'lightgrey'}
     
     sns.barplot(data=df_melted, x='Date', y='Value', hue='Type', palette=custom_palette, ax=ax[3])
     ax[3].set_title('Caloric Intake Over Time', fontweight='bold', fontsize=12, loc='left')
@@ -129,12 +129,12 @@ def body_values(df2):
     plt.show()
 
 def correlation_waist_v_weight(df2, ax) -> None:
-    df_corr_1 = df2[['Waist (cm)', 'Wgt (kg)']].dropna()
-    df_corr_1['Waist (cm)_MA'] = df_corr_1['Waist (cm)'].rolling(window=7).mean()
-    df_corr_1['Wgt (kg)_MA'] = df_corr_1['Wgt (kg)'].rolling(window=7).mean()
+    df_corr_1 = df2[['Waist', 'Weight']].dropna()
+    df_corr_1['Waist_MA'] = df_corr_1['Waist'].rolling(window=7).mean()
+    df_corr_1['Weight_MA'] = df_corr_1['Weight'].rolling(window=7).mean()
     df_corr_1 = df_corr_1.dropna()
 
-    correlation_matrix = df_corr_1[['Waist (cm)_MA', 'Wgt (kg)_MA']].corr()
+    correlation_matrix = df_corr_1[['Waist_MA', 'Weight_MA']].corr()
     print("Waist vs. Weight Correlation Matrix")
     print(correlation_matrix)
 
@@ -142,15 +142,15 @@ def correlation_waist_v_weight(df2, ax) -> None:
     ax.set_title("Waist vs. Weight Correlation Matrix")
 
 def correlation_weight_vs_kcal(df2, ax) -> None:
-    df_corr_2 = df2[['Wgt (kg)', 'kcal']].dropna()
+    df_corr_2 = df2[['Weight', 'kcal']].dropna()
     print("Data for correlation_weight_vs_kcal before moving average:\n", df_corr_2.head())  # Debug print
 
-    df_corr_2['Wgt (kg)_MA'] = df_corr_2['Wgt (kg)'].rolling(window=7).mean()
+    df_corr_2['Weight_MA'] = df_corr_2['Weight'].rolling(window=7).mean()
     df_corr_2['kcal_MA'] = df_corr_2['kcal'].rolling(window=7).mean()
     df_corr_2 = df_corr_2.dropna()
     print("Data for correlation_weight_vs_kcal after moving average:\n", df_corr_2.head())  # Debug print
 
-    correlation_matrix = df_corr_2[['Wgt (kg)_MA', 'kcal_MA']].corr()
+    correlation_matrix = df_corr_2[['Weight_MA', 'kcal_MA']].corr()
     print("Correlation Matrix for Weight vs. Kcal with Moving Averages:")
     print(correlation_matrix)
 
