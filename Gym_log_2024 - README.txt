@@ -5,6 +5,7 @@ Case Study created by Jan Mikloško.
 This is my first Case study to show basic data analysis skills.
 ------------------------------------------------------------------------------------
 
+
 Goals:
 Clean collected data and prepare it for analysis.
 Exercise Python for data analysis and learn to use Python libraries such as Pandas, Matplotlib, Seaborn, Numpy, etc.
