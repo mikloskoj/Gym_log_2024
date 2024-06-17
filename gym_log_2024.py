@@ -311,12 +311,8 @@ def main():
     df1, df2 = load_data(file_path_1, file_path_2)
     if df1 is not None and df2 is not None:
         df1, df2 = data_preparation(df1, df2)
-
-
         
-        excercise_volumes(df1, body_weight, selected_exercises)
-        '''
-                body_values(df2)
+        body_values(df2)
         fig, axes = plt.subplots(1, 2, figsize=(15, 6))
         
         correlation_waist_v_weight(df2, axes[0])
@@ -324,6 +320,21 @@ def main():
         plt.show()
 
         sets_view(df1)
+
+        
+        excercise_volumes(df1, body_weight, selected_exercises)
+        '''
+        body_values(df2)
+        fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+        
+        correlation_waist_v_weight(df2, axes[0])
+        correlation_weight_vs_kcal(df2, axes[1])
+        plt.show()
+
+        sets_view(df1)
+
+        
+        excercise_volumes(df1, body_weight, selected_exercises)
 
        
 
