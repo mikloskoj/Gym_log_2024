@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import seaborn as sns
 import matplotlib.gridspec as gridspec
+import matplotlib.patches as patches
 
 file_path_1 = 'gym_log_Q1_2024 - workout data.csv'
 file_path_2 = 'gym_log_Q1_2024 - bio_data.csv'
@@ -14,6 +15,7 @@ background_color = '#fdfcfc'
 color = "#193f71" # color
 color_palette = sns.dark_palette(color, reverse=True, as_cmap=True)
 line_color = color
+title_text_color = '#454545'
 selected_exercises = ('Kneeling dip', 'Bench press', 'Chest press', 'Prone leg curl', 'Lat pulldown', 'Bicep curl')
 
 
@@ -324,8 +326,9 @@ def consistency_view(df1) -> None:
     print(df_place.head(5))
 
 
-    fig, ((ax1, ax2),(ax3, ax4)) = plt.subplots(2, 2, figsize=(8, 6))
-    fig.suptitle('Gym Workout Data', fontsize=16)
+    fig, ((ax1, ax2),(ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 8))
+    plt.subplots_adjust(hspace=-0.2, wspace=-0.1)
+    fig.suptitle('Workout Consistency view', fontsize=18, color=title_text_color)
 
     # First table
     ax1.axis('tight')
@@ -334,6 +337,11 @@ def consistency_view(df1) -> None:
     table1.auto_set_font_size(False)
     table1.set_fontsize(8)  # Set font size for better readability
     table1.scale(1.5, 1.2)   # Scale table to fit figure size
+    fig.text(0.05, 0.9, 'Consistency each month and grouped by place', ha='left', fontsize=11, fontweight='bold', color=title_text_color)
+    
+    # Rectangle(xy, width, height, **kwargs)
+    rect = patches.Rectangle((0.04, 0.05), 0.9, 0.38, transform=fig.transFigure, linewidth=0.5, edgecolor=line_color, facecolor='none')
+    fig.patches.append(rect)
 
     sns.lineplot(
         ax=ax2,
@@ -353,6 +361,7 @@ def consistency_view(df1) -> None:
     table2.auto_set_font_size(False)
     table2.set_fontsize(8)  # Set font size for better readability
     table2.scale(1, 1.2)   # Scale table to fit figure size
+    fig.text(0.05, 0.45, 'Place of workout view', ha='left', fontsize=11, fontweight='bold', color=title_text_color)
     
     sns.barplot(
         ax=ax4,
@@ -364,29 +373,37 @@ def consistency_view(df1) -> None:
     
     ax4.tick_params(axis='y', labelsize=8)
     ax4.tick_params(axis='x', labelsize=8)
+    pos1 = ax4.get_position()  # Get the original position of ax4
+    pos2 = [pos1.x0, pos1.y0 + 0.11, pos1.width, pos1.height]  # Modify the position
+    ax4.set_position(pos2)  # Set the new position
     # ax2.set_title('Workout Sessions by Place')
 
 
     # Adjust layout to ensure everything fits well
-    plt.tight_layout()
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    # plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.1, 0.95, 0.95])
     fig.text(0.2, 0.01, 'Data collected from January to June 2024', ha='center', fontsize=8, style='italic')
 
     for key, cell in table1.get_celld().items():
             cell.set_edgecolor(border_color)
             cell.set_linewidth(0.2)
+            cell.set_text_props(weight='normal', color=title_text_color, fontsize=8)
             if key[0] == 0:
-                cell.set_text_props(weight='bold', color='white', fontsize=6)
+                cell.set_text_props(weight='bold', color='white', fontsize=7)
                 cell.set_facecolor('#40466e')
+                cell.set_height(0.1)
             else:
                 cell.set_facecolor('#f2f2f2')
                 
     for key, cell in table2.get_celld().items():
         cell.set_edgecolor(border_color)
         cell.set_linewidth(0.2)
+        cell.set_text_props(weight='normal', color=title_text_color, fontsize=8)
+        cell.set_height(0.2)
         if key[0] == 0:
-            cell.set_text_props(weight='bold', color='white', fontsize=6)
+            cell.set_text_props(weight='bold', color='white', fontsize=7)
             cell.set_facecolor('#40466e')
+            cell.set_height(0.1)
         else:
             cell.set_facecolor('#f2f2f2')
 
@@ -403,15 +420,17 @@ def main():
     if df1 is not None and df2 is not None:
         df1, df2 = data_preparation(df1, df2)
         consistency_view(df1)
-
-        '''
-                body_values(df2)
+        body_values(df2)
         fig, axes = plt.subplots(1, 2, figsize=(15, 6))
         correlation_waist_v_weight(df2, axes[0])
         correlation_weight_vs_kcal(df2, axes[1])
         plt.show()
         sets_view(df1)
         excercise_volumes(df1, body_weight, selected_exercises)
+        
+        
+        '''
+
        
 
         '''
