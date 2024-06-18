@@ -309,19 +309,6 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
 
 def consistency_view(df1) -> None:
     
-    columns_to_convert = ['Reps', 'Sets', 'Weight', 'Duration']
-    df1[columns_to_convert] = df1[columns_to_convert].astype(str).apply(lambda x: x.str.replace(',','.'))
-    df1[columns_to_convert] = df1[columns_to_convert].astype(str).apply(lambda x: pd.to_numeric(x, errors='coerce'))
-    df1['Date'] = pd.to_datetime(df1['Date'], format='%d.%m.%Y' , errors='coerce')
-    df1['Month'] = df1['Date'].dt.month
-
-
-    # Create 'Month_Name' column (full month name)
-    df1['Month_Name'] = df1['Date'].dt.strftime('%B')
-
-
-    # df = df[df['Exercise name'] == 'Kneeling dip']
-
     df1['Duration'] = df1['Duration'].round(1)
     df1['Reps'] = df1['Sets'] * df1['Reps']
     df1['Weight'] = df1.apply(lambda row: row['Weight'] + body_weight if row['Body weight flg'] == 'BW' else row['Weight'], axis=1)
