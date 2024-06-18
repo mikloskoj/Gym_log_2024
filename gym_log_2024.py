@@ -9,7 +9,7 @@ file_path_2 = 'gym_log_Q1_2024 - bio_data.csv'
 body_weight = 79
 height = 181
 sns.set_style("white")
-border_color = 'lightgrey'
+border_color = 'white'
 background_color = '#fdfcfc'
 color = "#193f71" # color
 color_palette = sns.dark_palette(color, reverse=True, as_cmap=True)
@@ -33,22 +33,24 @@ def load_data(file_path_1, file_path_2):
     return df1, df2
 
 def data_preparation(df1, df2):
-    df1['Date'] = pd.to_datetime(df1['Date'], errors='coerce', dayfirst=True)
-    df1['Weight'] = df1['Weight'].astype(str).str.replace(',', '.')
-    df1['Weight'] = pd.to_numeric(df1['Weight'], errors='coerce')
-    df1['Reps'] = pd.to_numeric(df1['Reps'], errors='coerce')
-    df1['Sets'] = pd.to_numeric(df1['Sets'], errors='coerce')
-
-    # New columns
-    df1['Week'] = df1['Date'].dt.isocalendar().week
+    
+    columns_to_convert = ['Reps', 'Sets', 'Weight', 'Duration']
+    df1[columns_to_convert] = df1[columns_to_convert].astype(str).apply(lambda x: x.str.replace(',','.'))
+    df1[columns_to_convert] = df1[columns_to_convert].astype(str).apply(lambda x: pd.to_numeric(x, errors='coerce'))
+    df1['Date'] = pd.to_datetime(df1['Date'], format='%d.%m.%Y' , errors='coerce')
     df1['Month'] = df1['Date'].dt.month
-
+    df1['Week'] = df1['Date'].dt.isocalendar().week
+    df1['Month_Name'] = df1['Date'].dt.strftime('%B')
     df1 = df1.sort_values(by='Date', ascending=True)
+    
 
     df2[['kcal', 'kcal total', 'Weight', 'Waist']] = df2[['kcal', 'kcal total', 'Weight', 'Waist']].astype(str).apply(lambda x: x.str.replace(',', '.'))
     df2[['kcal', 'kcal total', 'Weight', 'Waist']] = df2[['kcal', 'kcal total', 'Weight', 'Waist']].apply(pd.to_numeric, errors='coerce')
     df2['Date'] = pd.to_datetime(df2['Date'], format='%d.%m.%Y', dayfirst=True)
     df2['BMI'] = df2['Weight'] / ((height / 100) ** 2) 
+    
+    
+
 
 
     return df1, df2
@@ -226,7 +228,6 @@ def sets_view(df1, window=8) -> None:
     plt.tight_layout()
     plt.show()
 
-
 def excercise_volumes(df1, body_weight, selected_exercises, window=8):
     filtered_df = df1[(df1['Muscle group'] != 'Cardio') & (df1['Muscle group'] != 'Walk') & (df1['Exercise name'].isin(selected_exercises))].copy()
 
@@ -306,36 +307,124 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
     plt.tight_layout()
     plt.show()
 
+def consistency_view(df1) -> None:
+    
+    columns_to_convert = ['Reps', 'Sets', 'Weight', 'Duration']
+    df1[columns_to_convert] = df1[columns_to_convert].astype(str).apply(lambda x: x.str.replace(',','.'))
+    df1[columns_to_convert] = df1[columns_to_convert].astype(str).apply(lambda x: pd.to_numeric(x, errors='coerce'))
+    df1['Date'] = pd.to_datetime(df1['Date'], format='%d.%m.%Y' , errors='coerce')
+    df1['Month'] = df1['Date'].dt.month
+
+
+    # Create 'Month_Name' column (full month name)
+    df1['Month_Name'] = df1['Date'].dt.strftime('%B')
+
+
+    # df = df[df['Exercise name'] == 'Kneeling dip']
+
+    df1['Duration'] = df1['Duration'].round(1)
+    df1['Reps'] = df1['Sets'] * df1['Reps']
+    df1['Weight'] = df1.apply(lambda row: row['Weight'] + body_weight if row['Body weight flg'] == 'BW' else row['Weight'], axis=1)
+
+    df1 = df1.sort_values(by='Month').reset_index()
+
+
+
+    df_months = df1.groupby(['Month', 'Month_Name', 'Place'])[['Sets','Reps','Duration']].sum().reset_index()
+    df_place = df1.groupby(['Place'])[['Sets', 'Reps', 'Duration']].sum().reset_index()
+
+    print(df_months.head(5))
+    print(df_place.head(5))
+
+
+    fig, ((ax1, ax2),(ax3, ax4)) = plt.subplots(2, 2, figsize=(8, 6))
+    fig.suptitle('Gym Workout Data', fontsize=16)
+
+    # First table
+    ax1.axis('tight')
+    ax1.axis('off')
+    table1 = ax1.table(cellText=df_months.values, colLabels=df_months.columns, cellLoc='center', loc='center')
+    table1.auto_set_font_size(False)
+    table1.set_fontsize(8)  # Set font size for better readability
+    table1.scale(1.5, 1.2)   # Scale table to fit figure size
+
+    sns.lineplot(
+        ax=ax2,
+        data=df_months,
+        x='Month',
+        y='Duration',
+        color= line_color
+
+    )
+    ax2.tick_params(axis='y', labelsize=8)
+    ax2.tick_params(axis='x', labelsize=8)
+
+    # Second table
+    ax3.axis('tight')
+    ax3.axis('off')
+    table2 = ax3.table(cellText=df_place.values, colLabels=df_place.columns, cellLoc='center', loc='center')
+    table2.auto_set_font_size(False)
+    table2.set_fontsize(8)  # Set font size for better readability
+    table2.scale(1, 1.2)   # Scale table to fit figure size
+    
+    sns.barplot(
+        ax=ax4,
+        data=df_place,
+        x='Place',
+        y='Duration', color=color
+
+    )
+    
+    ax4.tick_params(axis='y', labelsize=8)
+    ax4.tick_params(axis='x', labelsize=8)
+    # ax2.set_title('Workout Sessions by Place')
+
+
+    # Adjust layout to ensure everything fits well
+    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    fig.text(0.2, 0.01, 'Data collected from January to June 2024', ha='center', fontsize=8, style='italic')
+
+    for key, cell in table1.get_celld().items():
+            cell.set_edgecolor(border_color)
+            cell.set_linewidth(0.2)
+            if key[0] == 0:
+                cell.set_text_props(weight='bold', color='white', fontsize=6)
+                cell.set_facecolor('#40466e')
+            else:
+                cell.set_facecolor('#f2f2f2')
+                
+    for key, cell in table2.get_celld().items():
+        cell.set_edgecolor(border_color)
+        cell.set_linewidth(0.2)
+        if key[0] == 0:
+            cell.set_text_props(weight='bold', color='white', fontsize=6)
+            cell.set_facecolor('#40466e')
+        else:
+            cell.set_facecolor('#f2f2f2')
+
+    for ax in [ax1, ax2, ax3, ax4]:
+        ax.set_facecolor(background_color)
+        for spine in ax.spines.values():
+            spine.set_edgecolor(border_color)
+    # Display the tables
+    plt.show()
+
 
 def main():
     df1, df2 = load_data(file_path_1, file_path_2)
     if df1 is not None and df2 is not None:
         df1, df2 = data_preparation(df1, df2)
-        
-        body_values(df2)
-        fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-        
-        correlation_waist_v_weight(df2, axes[0])
-        correlation_weight_vs_kcal(df2, axes[1])
-        plt.show()
+        consistency_view(df1)
 
-        sets_view(df1)
-
-        
-        excercise_volumes(df1, body_weight, selected_exercises)
         '''
-        body_values(df2)
+                body_values(df2)
         fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-        
         correlation_waist_v_weight(df2, axes[0])
         correlation_weight_vs_kcal(df2, axes[1])
         plt.show()
-
         sets_view(df1)
-
-        
         excercise_volumes(df1, body_weight, selected_exercises)
-
        
 
         '''
