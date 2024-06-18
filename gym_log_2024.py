@@ -340,7 +340,7 @@ def consistency_view(df1) -> None:
     fig.text(0.05, 0.9, 'Consistency each month and grouped by place', ha='left', fontsize=11, fontweight='bold', color=title_text_color)
     
     # Rectangle(xy, width, height, **kwargs)
-    rect = patches.Rectangle((0.04, 0.05), 0.9, 0.38, transform=fig.transFigure, linewidth=0.5, edgecolor=line_color, facecolor='none')
+    rect = patches.Rectangle((0.04, 0.05), 0.9, 0.38, transform=fig.transFigure, linewidth=0.8, edgecolor=title_text_color, facecolor='none')
     fig.patches.append(rect)
 
     sns.lineplot(
