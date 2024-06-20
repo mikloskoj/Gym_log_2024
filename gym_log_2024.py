@@ -4,6 +4,10 @@ from matplotlib.lines import Line2D
 import seaborn as sns
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as patches
+import matplotlib.dates as mdates
+from matplotlib.patches import Patch
+import numpy as np
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 file_path_1 = 'gym_log_Q1_2024 - workout data.csv'
 file_path_2 = 'gym_log_Q1_2024 - bio_data.csv'
@@ -44,6 +48,8 @@ def data_preparation(df1, df2):
     df1['Week'] = df1['Date'].dt.isocalendar().week
     df1['Month_Name'] = df1['Date'].dt.strftime('%B')
     df1 = df1.sort_values(by='Date', ascending=True)
+    
+
     
 
     df2[['kcal', 'kcal total', 'Weight', 'Waist']] = df2[['kcal', 'kcal total', 'Weight', 'Waist']].astype(str).apply(lambda x: x.str.replace(',', '.'))
@@ -163,12 +169,62 @@ def correlation_weight_vs_kcal(df2, ax) -> None:
     ax.set_title("Weight vs. Kcal Correlation Matrix Heatmap with Moving Averages")
 
 def sets_view(df1, window=8) -> None:
-    df_weekly = df1.groupby(['Week'])[['Sets']].sum()
-    df_monthly = df1.groupby(['Month'])[['Sets']].sum()
-    df_daily = df1.groupby(['Date'])[['Sets']].sum()
-   
+    
 
+
+    
+    df_weekly = df1.groupby(['Date', 'Week'])[['Sets']].sum().reset_index()
+    df_monthly = df1.groupby(['Date', 'Month'])[['Sets']].sum().reset_index()
+    df_daily = df1.groupby(['Date'])[['Sets']].sum().reset_index()
+    
+    # Create a date range
+    date_range = pd.date_range(start=df_daily['Date'].min(), end=df_daily['Date'].max())
+    df_daily = df_daily.set_index('Date').reindex(date_range).reset_index()
+    df_daily.columns = ['Date', 'Sets']
     print(df_daily.head())
+    
+    # Create a date range
+    date_range = pd.date_range(start=df_weekly['Date'].min(), end=df_weekly['Date'].max())
+    df_weekly = df_weekly.set_index('Date').reindex(date_range).reset_index()
+    df_weekly.columns = ['Date', 'Week', 'Sets']
+    df_weekly = df_weekly.groupby(['Week'])['Sets'].sum().reset_index()
+    print(df_weekly.head())
+    
+    # Create a date range
+    date_range = pd.date_range(start=df_monthly['Date'].min(), end=df_monthly['Date'].max())
+    df_monthly = df_monthly.set_index('Date').reindex(date_range).reset_index()
+    df_monthly.columns = ['Date', 'Month', 'Sets']
+    df_monthly = df_monthly.groupby(['Month'])['Sets'].sum().reset_index()
+    print(df_monthly.head())
+
+    # get max week
+    max_week_idx = df_weekly["Sets"].idxmax()
+    max_week = df_weekly.loc[max_week_idx, 'Week']
+    print(f'max_week: {max_week}')
+    # get max month
+    max_month_idx = df_monthly["Sets"].idxmax()
+    max_month = df_monthly.loc[max_month_idx, 'Month']
+    print(f'max_week: {max_month}')
+    # get max day
+    max_day_idx = df_daily["Sets"].idxmax()
+    max_day = df_daily.loc[max_day_idx, 'Date']
+    print(f'max_day: {max_day}')
+    
+    
+    highlight_date_1 = max_week
+    highlight_date_2 = max_month
+    highlight_date_3 = max_day
+    week_colors = ['orange' if date == highlight_date_1 else
+            color for date in df_weekly['Week']]
+    month_colors = ['orange' if date == highlight_date_2 else
+            color for date in df_monthly['Month']]
+    day_colors = ['orange' if date == highlight_date_3 else
+            color for date in df_daily['Date']]
+    
+    
+    
+    
+    max_month = df_monthly['Sets']
 
     fig = plt.figure(figsize=(11, 7))  # Create a figure
     gs = gridspec.GridSpec(2, 2, height_ratios=[1, 2])  # Create a gridspec with specific ratios
@@ -180,9 +236,9 @@ def sets_view(df1, window=8) -> None:
     sns.barplot(
         data=df_monthly.reset_index(),
         x='Month',
-        y='Sets',
-        hue='Sets',
-        palette=color_palette,
+        y='Sets', 
+        hue='Month',
+        palette=month_colors,
         ax=ax0
     )
     ax0.set_title('Monthly Sets', fontweight='bold', fontsize=12)
@@ -195,8 +251,8 @@ def sets_view(df1, window=8) -> None:
         data=df_weekly.reset_index(),
         x='Week',
         y='Sets',
-        hue='Sets',
-        palette=color_palette,
+        hue='Week',
+        palette=week_colors,
         ax=ax1
     )
     ax1.set_title('Weekly Sets', fontweight='bold', fontsize=12)
@@ -209,17 +265,24 @@ def sets_view(df1, window=8) -> None:
     sns.barplot(
         data=df_daily.reset_index(),
         x='Date',
-        y='Sets',
-        hue='Sets',
-        palette=color_palette,
+        y='Sets', hue='Date',
+        palette=day_colors,
         ax=ax2
     )
+    
+    '''
+            hue='Sets',
+        palette=color_palette,
+    '''
+    
     ax2.set_title('Daily Sets', fontweight='bold', fontsize=12)
-    ax2.set_ylabel('')
-    ax2.set_xlabel('Day',fontsize=6)
-    ax2.legend().remove()
+    ax2.set_ylabel('Sets')
+    ax2.set_xlabel('',fontsize=6)
+    # ax2.legend().remove()
     ax2.tick_params(axis='x', labelsize=5)
     ax2.tick_params(axis='y', labelsize=8)
+    ax2.xaxis.set_major_locator(mdates.DayLocator(interval=10))  # Change interval as needed
+    # ax2.xticks(rotation=45)
 
     for ax in [ax0, ax1, ax2]:
         ax.set_facecolor(background_color)
@@ -378,9 +441,6 @@ def consistency_view(df1) -> None:
     ax4.set_position(pos2)  # Set the new position
     # ax2.set_title('Workout Sessions by Place')
 
-
-    # Adjust layout to ensure everything fits well
-    # plt.tight_layout()
     plt.tight_layout(rect=[0, 0.1, 0.95, 0.95])
     fig.text(0.2, 0.01, 'Data collected from January to June 2024', ha='center', fontsize=8, style='italic')
 
@@ -414,23 +474,154 @@ def consistency_view(df1) -> None:
     # Display the tables
     plt.show()
 
+def workout_details(df1) -> None:
+    
+    '''
+    df1['Date'] = pd.to_datetime(df1['Date'], format='%d.%m.%Y')
+    df1['Week'] = df1['Date'].dt.isocalendar().week
+
+    columns_to_convert = ['Sets', 'Reps', 'Weight', 'Duration']
+    df1[columns_to_convert] = df1[columns_to_convert].astype(str).apply(lambda x: x.str.replace(',', '.'))
+    df1[columns_to_convert] = df1[columns_to_convert].apply(lambda x: pd.to_numeric(x, errors='coerce'))
+'''
+    df1 = df1[(df1['Muscle group'] != 'Cardio') & (df1['Muscle group'] != 'Walk')]
+    df1['Reps'] = df1['Reps'].fillna(1)
+    df1['Total_reps'] = df1['Sets'] * df1['Reps']
+
+
+    # Group by 'Date' and sum 'Total_reps'
+    df1 = df1.groupby(['Date', 'Week'])['Total_reps'].sum().reset_index()
+
+    # Create a date range
+    date_range = pd.date_range(start=df1['Date'].min(), end=df1['Date'].max())
+
+    # Reindex the dataframe to include all dates in the range
+    df1 = df1.set_index('Date').reindex(date_range).reset_index()
+    df1.columns = ['Date', 'Week', 'Total_reps']
+
+    average_initial_reps = df1["Total_reps"].head(30).mean()
+    average_final_reps = df1["Total_reps"].tail(30).mean()
+
+    avg = df1["Total_reps"].mean()
+    print(f'AVG: {avg}')
+    max = df1["Total_reps"].max()
+    print(f'MAX: {max}')
+
+    max_idx = df1["Total_reps"].idxmax()
+    max_date = df1.loc[max_idx, 'Date']
+    min_idx = df1["Total_reps"].idxmin()
+    min_date = df1.loc[min_idx, 'Date']
+    print(f'max_date: {max_date}')
+
+
+
+    # Highlight specific dates
+    highlight_date_1 = pd.Timestamp('2024-01-14')
+    highlight_date_2 = pd.Timestamp('2024-04-29')
+    highlight_date_3 = max_date
+    highlight_date_4 = min_date
+    colors = ['red' if date == highlight_date_1 else 
+            'orange' if date == highlight_date_2 else 
+            'green' if date == highlight_date_3 else 
+            'darkblue' if date == highlight_date_4 else 
+            'lightgrey' for date in df1['Date']]
+
+    # Plotting
+    fig, ax1 = plt.subplots(figsize=(15, 8))
+
+    # Create barplot
+    sns.barplot(ax=ax1, x=df1['Date'], y=df1['Total_reps'], hue=df1['Date'], palette=colors)
+    ax1.xaxis.set_major_locator(mdates.DayLocator(interval=10))  # Change interval as needed
+    plt.xticks(rotation=45)
+
+    # Set labels and title
+    ax1.set_xlabel('')
+    ax1.set_ylabel('Total_reps')
+    ax1.set_title(f'Total reps over time')
+
+    # Set the background color
+    ax1.set_facecolor(background_color)
+
+    # Create custom legend
+    legend_handles = [
+        Patch(color='red', label='2024-01-14'),
+        Patch(color='orange', label='2024-04-29'),
+        Patch(color='lightgrey', label='Other Dates')
+    ]
+    ax1.legend(handles=legend_handles, title='Legend')
+
+    # Define the inset plot
+    inset_ax = inset_axes(ax1, width="30%", height="15%", loc="upper left")  # Adjust width, height, and loc as needed
+
+    # Text plot data
+    text = f"Mean change in Total Reps:\n on average"
+    inset_ax.text(0.5, 0.5, text, fontsize=12, ha='center')
+    inset_ax.set_xticks([])  # Remove x-ticks
+    inset_ax.set_yticks([])  # Remove y-ticks
+
+
+    # Set window title
+    plt.gcf().canvas.manager.set_window_title('02_Gym Log Data Visualization')
+
+    # df['Total_reps'] = df['Total_reps'].dropna()
+    # df = df.dropna(subset=['Date'])
+
+    sns_regplot = sns.regplot(x=np.arange(0, len(df1['Date'])), y=df1['Total_reps'], ax=ax1, marker='.', color='orange',line_kws={
+            'color': 'orange',  # Line color
+            'linestyle': '-',  # Line style (e.g., '--' for dashed line)
+            'linewidth': 1  # Line width
+        })
+
+
+    df_x = df1[['Week', 'Total_reps']]
+    df_x = df_x.dropna(subset=['Week'])
+    df_x = df_x.groupby('Week')['Total_reps'].sum().reset_index()
+    df_x['Change'] = df_x['Total_reps'].pct_change() * 100
+    df_x = df_x.groupby('Week')['Change'].sum().reset_index()
+    print(df_x.head(30))
+
+
+    df_x['Positive'] = df_x['Change'] >= 0
+    # Define the inset plot
+    inset_ax2 = inset_axes(ax1, width="30%", height="15%", loc="lower left")  # Adjust width, height, and loc as needed
+
+    # Text plot data
+    text = sns.barplot(data=df_x, y=df_x['Change'], x=df_x['Week'], hue='Positive',palette={True: 'green', False: 'red'}, dodge=False)
+    inset_ax2.set_xticks([])  # Remove x-ticks
+    inset_ax2.set_title('Weekly change in sets volume', weight='normal', loc='right', fontsize=9, color='black')
+    inset_ax2.legend().remove()
+    inset_ax2.patch.set_facecolor('white')
+    inset_ax2.patch.set_alpha(0.7)
+
+    for spine in ax1.spines.values():
+        spine.set_edgecolor(border_color)
+    
+    for spine in inset_ax2.spines.values():
+        spine.set_edgecolor('lightgrey')
+
+    # inset_ax2.set_yticks([])  # Remove y-ticks
+    # inset_ax2.axhline(0, color="r", clip_on=False)
+
+    # Show plot
+    plt.show()
 
 def main():
     df1, df2 = load_data(file_path_1, file_path_2)
     if df1 is not None and df2 is not None:
         df1, df2 = data_preparation(df1, df2)
+
+        workout_details(df1)
         consistency_view(df1)
         body_values(df2)
         fig, axes = plt.subplots(1, 2, figsize=(15, 6))
         correlation_waist_v_weight(df2, axes[0])
         correlation_weight_vs_kcal(df2, axes[1])
         plt.show()
-        sets_view(df1)
+        
         excercise_volumes(df1, body_weight, selected_exercises)
-        
-        
+        sets_view(df1)
         '''
-
+        
        
 
         '''
