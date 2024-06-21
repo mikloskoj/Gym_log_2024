@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as patches
 import matplotlib.dates as mdates
-from matplotlib.patches import Patch
+from matplotlib.patches import FancyBboxPatch, Patch
 import numpy as np
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
@@ -15,9 +15,16 @@ body_weight = 79
 height = 181
 sns.set_style("white")
 border_color = 'white'
+border_color_2 = 'lightgrey'
 background_color = '#fdfcfc'
 color = "#193f71" # color
+false_color = '#840606'
+true_color = '#e0990b'
+highlight_color = '#e0990b'
+highlight_color_2 = '#f9d48a'
 color_palette = sns.dark_palette(color, reverse=True, as_cmap=True)
+max_color_value  = '#002347'
+
 line_color = color
 title_text_color = '#454545'
 selected_exercises = ('Kneeling dip', 'Bench press', 'Chest press', 'Prone leg curl', 'Lat pulldown', 'Bicep curl')
@@ -137,22 +144,27 @@ def body_values(df2):
         a.set_facecolor(background_color)
 
     plt.tight_layout()
+    plt.gcf().canvas.manager.set_window_title('0X_Body macros (Gym_log_2024)')
     plt.show()
 
-def correlation_waist_v_weight(df2, ax) -> None:
+
+def correlation_view_1(df2) -> None:
     df_corr_1 = df2[['Waist', 'Weight']].dropna()
     df_corr_1['Waist_MA'] = df_corr_1['Waist'].rolling(window=7).mean()
     df_corr_1['Weight_MA'] = df_corr_1['Weight'].rolling(window=7).mean()
     df_corr_1 = df_corr_1.dropna()
 
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+
     correlation_matrix = df_corr_1[['Waist_MA', 'Weight_MA']].corr()
     print("Waist vs. Weight Correlation Matrix")
     print(correlation_matrix)
 
-    sns.heatmap(correlation_matrix, annot=True, cmap=color_palette, center=0, ax=ax)
-    ax.set_title("Waist vs. Weight Correlation Matrix")
+    sns.heatmap(ax=ax1, data=correlation_matrix, annot=True, cmap=color_palette, center=0)
+    ax1.set_title("Waist vs. Weight Correlation Matrix")
 
-def correlation_weight_vs_kcal(df2, ax) -> None:
+    # -------------------------------------------------------
+
     df_corr_2 = df2[['Weight', 'kcal']].dropna()
     print("Data for correlation_weight_vs_kcal before moving average:\n", df_corr_2.head())  # Debug print
 
@@ -161,18 +173,20 @@ def correlation_weight_vs_kcal(df2, ax) -> None:
     df_corr_2 = df_corr_2.dropna()
     print("Data for correlation_weight_vs_kcal after moving average:\n", df_corr_2.head())  # Debug print
 
-    correlation_matrix = df_corr_2[['Weight_MA', 'kcal_MA']].corr()
+    correlation_matrix2 = df_corr_2[['Weight_MA', 'kcal_MA']].corr()
     print("Correlation Matrix for Weight vs. Kcal with Moving Averages:")
-    print(correlation_matrix)
+    print(correlation_matrix2)
 
-    sns.heatmap(correlation_matrix, annot=True, cmap=color_palette, center=0, ax=ax)
-    ax.set_title("Weight vs. Kcal Correlation Matrix Heatmap with Moving Averages")
+    sns.heatmap(ax=ax2, data=correlation_matrix2, annot=True, cmap=color_palette, center=0)
+    ax2.set_title("Weight vs. Kcal Correlation Matrix Heatmap with Moving Averages")
+
+
+    plt.gcf().canvas.manager.set_window_title('0X_Correlation view (Gym_log_2024)')
+    plt.show()
+
 
 def sets_view(df1, window=8) -> None:
-    
-
-
-    
+ 
     df_weekly = df1.groupby(['Date', 'Week'])[['Sets']].sum().reset_index()
     df_monthly = df1.groupby(['Date', 'Month'])[['Sets']].sum().reset_index()
     df_daily = df1.groupby(['Date'])[['Sets']].sum().reset_index()
@@ -214,11 +228,11 @@ def sets_view(df1, window=8) -> None:
     highlight_date_1 = max_week
     highlight_date_2 = max_month
     highlight_date_3 = max_day
-    week_colors = ['orange' if date == highlight_date_1 else
+    week_colors = [highlight_color if date == highlight_date_1 else
             color for date in df_weekly['Week']]
-    month_colors = ['orange' if date == highlight_date_2 else
+    month_colors = [highlight_color if date == highlight_date_2 else
             color for date in df_monthly['Month']]
-    day_colors = ['orange' if date == highlight_date_3 else
+    day_colors = [highlight_color if date == highlight_date_3 else
             color for date in df_daily['Date']]
     
     
@@ -291,6 +305,7 @@ def sets_view(df1, window=8) -> None:
 
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
+    plt.gcf().canvas.manager.set_window_title('0X_Sets view (Gym_log_2024)')
     plt.show()
 
 def excercise_volumes(df1, body_weight, selected_exercises, window=8):
@@ -368,54 +383,250 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
             spine.set_edgecolor(border_color)
 
     fig.text(0.95, 0.1, f'Gym Workout Analysis Q1 2024\nThis shows the total volumes I have lifted since 1st of January.\nI hope you like my charts and everything is clear.\nselected_exercises: {selected_exercises} were excluded.', ha='right', va='center', fontsize=10, fontweight='normal')
-    fig.canvas.manager.set_window_title('Gym Workout Analysis 2024 - Total volumes')
+    plt.gcf().canvas.manager.set_window_title('0X_Workout volumes (Gym_log_2024)')
     plt.tight_layout()
     plt.show()
 
+def consistency_view_table(df1) -> None:
+
+    df1 = df1[(df1['Muscle group'] != 'Cardio') & (df1['Muscle group'] != 'Walk')]
+    df1['Duration'] = df1['Duration'].round(1)
+    # df1['Reps'] = df1['Reps'].fillna(1)
+    df1['Reps'] = df1['Sets'] * df1['Reps']
+    df1['Weight'] = df1.apply(lambda row: row['Weight'] + body_weight if row['Body weight flg'] == 'BW' else row['Weight'], axis=1)
+    # df1 = df1[(df1['Muscle group'] != 'Cartio') & (df1['Muscle group'] != 'Walk')]
+    
+    df1 = df1.sort_values(by='Month').reset_index()
+    
+
+    df_months = df1.groupby(['Month', 'Month_Name', 'Place'])[['Sets','Reps', 'Weight']].sum().reset_index()
+    
+    df_muscle = df1.groupby(['Muscle group'])[['Sets', 'Reps', 'Weight']].sum().reset_index()
+    df_muscle = df_muscle.sort_values('Sets', ascending=False)
+    df_muscle['Sets'] = df_muscle['Sets'].round(1)
+    max_sets_muscle_group = df_muscle.iloc[0]['Muscle group']
+    
+    
+    max_reps_muscle_group_df = df_muscle
+    max_reps_muscle_group_df = max_reps_muscle_group_df.sort_values('Reps', ascending=False)
+    max_reps_muscle_group = max_reps_muscle_group_df.iloc[0]['Muscle group']
+    print(f'max_reps_muscle_group {max_reps_muscle_group}')
+    
+    
+    max_weight_muscle_group_df = df_muscle
+    max_weight_muscle_group_df = max_weight_muscle_group_df.sort_values('Weight', ascending=False)
+    max_weight_muscle_group = max_weight_muscle_group_df.iloc[0]['Muscle group']
+    print(f'max_weight_muscle_group {max_weight_muscle_group}')
+    
+    
+    df_place = df1.groupby(['Place'])[['Sets', 'Reps', 'Duration']].sum().reset_index()
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+
+
+    ax1.axis('tight')
+    ax1.axis('off')
+    table1 = ax1.table(cellText=df_muscle.values, colLabels=df_muscle.columns, cellLoc='center', loc='center')
+    table1.auto_set_font_size(False)
+    table1.set_fontsize(8)  # Set font size for better readability
+    table1.scale(1.5, 1.2)   # Scale table to fit figure size
+    ax1.set_title('Sum of Repetitions by Muscle Group', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=-0.3, y=0.88)
+    
+
+    df_place = df_place.sort_values('Duration', ascending=False)
+    
+    colors = [highlight_color if place == 'Gym' else 
+              color if place == 'Out' else 
+              false_color if place == 'Home' else 
+            color for place in df_months['Place']]
+
+
+    sns.barplot(
+        ax=ax2,
+        data=df_muscle,
+        x='Sets',
+        y='Muscle group', 
+        hue='Sets',
+        palette=color_palette
+        
+
+    )
+    
+    
+
+    # Change the color of the confidence interval
+    line = ax2.get_lines()[0]
+    x_data = line.get_xdata()
+    y_data = line.get_ydata()
+
+    # Redraw the confidence interval
+    ax2.fill_between(x_data, y_data, color=color, alpha=0)  # Change 'lightblue' to your desired color
+
+    ax2.tick_params(axis='y', labelsize=8)
+    ax2.tick_params(axis='x', labelsize=8)
+    ax2.set_xlabel('')
+    ax2.set_ylabel('Number of hours', fontsize=6)
+    ax2.set_title('Sum of Repetitions by Muscle Group chart', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=-0.3)
+    ax2.get_legend().remove()
+
+
+    
+    colors = [highlight_color if place == 'Gym' else 
+            color if place == 'Out' else 
+            false_color if place == 'Home' else 
+            'lightgrey' for place in df_months['Place']]
+    
+
+
+    
+    
+
+    for key, cell in table1.get_celld().items():
+        cell.set_edgecolor(border_color)
+        cell.set_linewidth(0.2)
+        cell.set_text_props(weight='normal', color=title_text_color, fontsize=8)
+        if key[0] == 0:
+            cell.set_text_props(weight='bold', color='grey', fontsize=7)
+            cell.set_facecolor('lightgrey')
+            cell.set_height(0.15)
+        else:
+            max_sets_muscle_group_name = df_muscle.iloc[key[0] - 1]['Muscle group']
+            max_reps_muscle_group_name = max_reps_muscle_group_df.iloc[key[0] - 1]['Muscle group']
+            max_weight_muscle_group_name = max_weight_muscle_group_df.iloc[key[0] - 1]['Muscle group']
+            if max_sets_muscle_group_name == max_sets_muscle_group and key[1] == 1:  # Highlight the second column cell
+                cell.set_facecolor(highlight_color)
+                cell.set_text_props(weight='bold', color='white', fontsize=8)
+            elif max_sets_muscle_group_name == max_sets_muscle_group and key[1] == 0:  # Highlight the second column cell
+                cell.set_facecolor(max_color_value)
+                cell.set_text_props(weight='bold', color='white', fontsize=8)
+            elif max_reps_muscle_group_name == max_reps_muscle_group and key[1] == 2:  # Highlight the second column cell
+                cell.set_facecolor(background_color)
+                cell.set_text_props(weight='bold', color=title_text_color, fontsize=8)
+            elif max_weight_muscle_group_name == max_weight_muscle_group and key[1] == 3:  # Highlight the second column cell
+                cell.set_facecolor(background_color)
+                cell.set_text_props(weight='bold', color=title_text_color, fontsize=8)
+            else:
+                cell.set_facecolor(background_color)
+                cell.set_text_props(weight='normal', color=title_text_color, fontsize=6)
+                              
+
+    for ax in [ax1, ax2]:
+        ax.set_facecolor(background_color)
+        for spine in ax.spines.values():
+            spine.set_edgecolor(border_color)
+    
+        '''    # Rectangle(xy, width, height, **kwargs)
+    rect = patches.Rectangle((0.04, 0.05), 0.9, 0.38, transform=fig.transFigure, linewidth=0.8, edgecolor=border_color_2, facecolor='none')
+    fig.patches.append(rect)'''
+    
+    
+    fig.suptitle('\nWorkout Consistency view', fontsize=18, color=title_text_color)
+    fig.text(0.5, 0.90, '*Cardio workouts were exempt from the dataset.', ha='center', fontsize=8, style='italic')
+    
+    plt.gcf().canvas.manager.set_window_title('0X_workout consistency view 2 (Gym_log_2024)')
+    plt.subplots_adjust(hspace=-0.2, wspace=-0.1)
+    plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
+    plt.show()
+  
+    
+    
 def consistency_view(df1) -> None:
     
     df1['Duration'] = df1['Duration'].round(1)
     df1['Reps'] = df1['Sets'] * df1['Reps']
     df1['Weight'] = df1.apply(lambda row: row['Weight'] + body_weight if row['Body weight flg'] == 'BW' else row['Weight'], axis=1)
-
+    # df1 = df1[(df1['Muscle group'] != 'Cartio') & (df1['Muscle group'] != 'Walk')]
+    
     df1 = df1.sort_values(by='Month').reset_index()
 
-
-
-    df_months = df1.groupby(['Month', 'Month_Name', 'Place'])[['Sets','Reps','Duration']].sum().reset_index()
+    df_months = df1.groupby(['Month', 'Month_Name', 'Place'])[['Sets','Reps', 'Duration']].sum().reset_index()
+    df_months_sets = df1.groupby(['Place'])[['Sets']].sum().reset_index()
+    df_months_duration = df1.groupby(['Place'])[['Duration']].sum().reset_index()
+    
+    df_muscle = df1.groupby(['Muscle group'])[['Duration']].sum().reset_index()
+    df_muscle = df_muscle.sort_values('Duration', ascending=False)
+    df_muscle['Duration'] = df_muscle['Duration'].round(1)
     df_place = df1.groupby(['Place'])[['Sets', 'Reps', 'Duration']].sum().reset_index()
+  
 
+    
     print(df_months.head(5))
     print(df_place.head(5))
 
 
     fig, ((ax1, ax2),(ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 8))
-    plt.subplots_adjust(hspace=-0.2, wspace=-0.1)
-    fig.suptitle('Workout Consistency view', fontsize=18, color=title_text_color)
+    # plt.subplots_adjust(hspace=-0.2, wspace=-0.1)
+    fig.suptitle('\nWorkout Consistency Hourly View', fontsize=18, color=title_text_color)
 
     # First table
-    ax1.axis('tight')
-    ax1.axis('off')
-    table1 = ax1.table(cellText=df_months.values, colLabels=df_months.columns, cellLoc='center', loc='center')
-    table1.auto_set_font_size(False)
-    table1.set_fontsize(8)  # Set font size for better readability
-    table1.scale(1.5, 1.2)   # Scale table to fit figure size
-    fig.text(0.05, 0.9, 'Consistency each month and grouped by place', ha='left', fontsize=11, fontweight='bold', color=title_text_color)
+    colors = [highlight_color if place == 'Gym' else 
+            color if place == 'Out' else 
+            false_color if place == 'Home' else 
+            'lightgrey' for place in df_months['Place']]
+    
+    sns.barplot(
+        ax=ax1,
+        data=df_months,
+        x='Month_Name',
+        y='Duration', 
+        palette=colors, 
+        hue='Place'
+
+    )
+    
+    ax1.tick_params(axis='y', labelsize=8)
+    ax1.tick_params(axis='x', labelsize=8)
+    pos1 = ax1.get_position()  # Get the original position of ax4
+    pos2 = [pos1.x0, pos1.y0 + 0.11, pos1.width, pos1.height]  # Modify the position
+    ax1.set_position(pos2)  # Set the new position
+    # ax2.set_title('Workout Sessions by Place')
+    # ax4.get_legend().remove()
+    ax1.set_xlabel('')
+    ax1.set_ylabel('Number of hours', fontsize=6)
+    # fig.text(0.05, 0.88, 'Consistency each month and grouped by place', ha='left', fontsize=11, fontweight='bold', color=title_text_color)
     
     # Rectangle(xy, width, height, **kwargs)
-    rect = patches.Rectangle((0.04, 0.05), 0.9, 0.38, transform=fig.transFigure, linewidth=0.8, edgecolor=title_text_color, facecolor='none')
-    fig.patches.append(rect)
+    # rect = patches.Rectangle((0.04, 0.05), 0.9, 0.38, transform=fig.transFigure, linewidth=0.8, edgecolor=border_color_2, facecolor='none')
+    # fig.patches.append(rect)
+
+
+    df_place = df_place.sort_values('Duration', ascending=False)
+    
+    colors = [highlight_color if place == 'Gym' else 
+              color if place == 'Out' else 
+              false_color if place == 'Home' else 
+            color for place in df_months['Place']]
+
 
     sns.lineplot(
         ax=ax2,
         data=df_months,
-        x='Month',
-        y='Duration',
-        color= line_color
+        x='Month_Name',
+        y='Duration', 
+        hue='Place',
+        marker='v',
+        palette=colors,
+        linestyle= '-',
+        linewidth=0.8
+        
 
     )
+    
+    
+
+    # Change the color of the confidence interval
+    line = ax2.get_lines()[0]
+    x_data = line.get_xdata()
+    y_data = line.get_ydata()
+
+    # Redraw the confidence interval
+    ax2.fill_between(x_data, y_data, color=color, alpha=0)  # Change 'lightblue' to your desired color
+
     ax2.tick_params(axis='y', labelsize=8)
     ax2.tick_params(axis='x', labelsize=8)
+    ax2.set_xlabel('')
+    ax2.set_ylabel('Number of hours', fontsize=6)
+
 
     # Second table
     ax3.axis('tight')
@@ -424,13 +635,20 @@ def consistency_view(df1) -> None:
     table2.auto_set_font_size(False)
     table2.set_fontsize(8)  # Set font size for better readability
     table2.scale(1, 1.2)   # Scale table to fit figure size
-    fig.text(0.05, 0.45, 'Place of workout view', ha='left', fontsize=11, fontweight='bold', color=title_text_color)
+    # fig.text(0.05, 0.45, 'Place of workout view', ha='left', fontsize=11, fontweight='bold', color=title_text_color)
+    
+    colors = [highlight_color if place == 'Gym' else 
+            color if place == 'Out' else 
+            false_color if place == 'Home' else 
+            'lightgrey' for place in df_months['Place']]
     
     sns.barplot(
         ax=ax4,
-        data=df_place,
+        data=df_months_duration,
         x='Place',
-        y='Duration', color=color
+        y='Duration', 
+        palette=colors, 
+        hue='Place'
 
     )
     
@@ -440,20 +658,10 @@ def consistency_view(df1) -> None:
     pos2 = [pos1.x0, pos1.y0 + 0.11, pos1.width, pos1.height]  # Modify the position
     ax4.set_position(pos2)  # Set the new position
     # ax2.set_title('Workout Sessions by Place')
+    # ax4.get_legend().remove()
+    ax4.set_xlabel('')
+    ax4.set_ylabel('Number of hours', fontsize=6)
 
-    plt.tight_layout(rect=[0, 0.1, 0.95, 0.95])
-    fig.text(0.2, 0.01, 'Data collected from January to June 2024', ha='center', fontsize=8, style='italic')
-
-    for key, cell in table1.get_celld().items():
-            cell.set_edgecolor(border_color)
-            cell.set_linewidth(0.2)
-            cell.set_text_props(weight='normal', color=title_text_color, fontsize=8)
-            if key[0] == 0:
-                cell.set_text_props(weight='bold', color='white', fontsize=7)
-                cell.set_facecolor('#40466e')
-                cell.set_height(0.1)
-            else:
-                cell.set_facecolor('#f2f2f2')
                 
     for key, cell in table2.get_celld().items():
         cell.set_edgecolor(border_color)
@@ -461,29 +669,40 @@ def consistency_view(df1) -> None:
         cell.set_text_props(weight='normal', color=title_text_color, fontsize=8)
         cell.set_height(0.2)
         if key[0] == 0:
-            cell.set_text_props(weight='bold', color='white', fontsize=7)
-            cell.set_facecolor('#40466e')
+            cell.set_text_props(weight='bold', color='grey', fontsize=7)
+            cell.set_facecolor('lightgrey')
             cell.set_height(0.1)
         else:
             cell.set_facecolor('#f2f2f2')
+            # Retrieve the text from the cell
+            cell_text = cell.get_text().get_text()
+            cell.set_text_props(weight='normal', color=title_text_color, fontsize=6)
+            
+            # Check if the cell contains a certain text (e.g., "Important")
+            if "Gym" in cell_text:
+                cell.set_facecolor(highlight_color)  # Change background color for cells containing "Important"
+                cell.set_text_props(color='white', weight='bold')  # Change text color for cells containing "Important"
+            elif "Out" in cell_text:
+                cell.set_facecolor(color)  # Change background color for cells containing "Important"
+                cell.set_text_props(color='white', weight='bold')  # Change text color for cells containing "Important"    
+            elif "Home" in cell_text:
+                cell.set_facecolor(false_color)  # Change background color for cells containing "Important"
+                cell.set_text_props(color='white', weight='bold')  # Change text color for cells containing "Important"                
 
     for ax in [ax1, ax2, ax3, ax4]:
         ax.set_facecolor(background_color)
         for spine in ax.spines.values():
             spine.set_edgecolor(border_color)
     # Display the tables
+    plt.gcf().canvas.manager.set_window_title('0X_workout consistency view 2  (Gym_log_2024)')
+    fig.text(0.5, 0.90, '*Data collected from January to June 2024', ha='center', fontsize=8, style='italic')   
+    plt.subplots_adjust(wspace=0.2, hspace=0.2)
+    # plt.tight_layout()
+
     plt.show()
 
 def workout_details(df1) -> None:
     
-    '''
-    df1['Date'] = pd.to_datetime(df1['Date'], format='%d.%m.%Y')
-    df1['Week'] = df1['Date'].dt.isocalendar().week
-
-    columns_to_convert = ['Sets', 'Reps', 'Weight', 'Duration']
-    df1[columns_to_convert] = df1[columns_to_convert].astype(str).apply(lambda x: x.str.replace(',', '.'))
-    df1[columns_to_convert] = df1[columns_to_convert].apply(lambda x: pd.to_numeric(x, errors='coerce'))
-'''
     df1 = df1[(df1['Muscle group'] != 'Cardio') & (df1['Muscle group'] != 'Walk')]
     df1['Reps'] = df1['Reps'].fillna(1)
     df1['Total_reps'] = df1['Sets'] * df1['Reps']
@@ -520,44 +739,48 @@ def workout_details(df1) -> None:
     highlight_date_2 = pd.Timestamp('2024-04-29')
     highlight_date_3 = max_date
     highlight_date_4 = min_date
-    colors = ['red' if date == highlight_date_1 else 
-            'orange' if date == highlight_date_2 else 
-            'green' if date == highlight_date_3 else 
-            'darkblue' if date == highlight_date_4 else 
+    colors = ['lightgrey' if date == highlight_date_1 else 
+            'lightgrey' if date == highlight_date_2 else 
+            highlight_color if date == highlight_date_3 else 
+            false_color if date == highlight_date_4 else 
             'lightgrey' for date in df1['Date']]
 
     # Plotting
     fig, ax1 = plt.subplots(figsize=(15, 8))
 
     # Create barplot
-    sns.barplot(ax=ax1, x=df1['Date'], y=df1['Total_reps'], hue=df1['Date'], palette=colors)
+    sns.barplot(ax=ax1, x=df1['Date'], y=df1['Total_reps'], hue=df1['Date'], palette=colors, width=1)
     ax1.xaxis.set_major_locator(mdates.DayLocator(interval=10))  # Change interval as needed
     plt.xticks(rotation=45)
 
     # Set labels and title
     ax1.set_xlabel('')
-    ax1.set_ylabel('Total_reps')
-    ax1.set_title(f'Total reps over time')
+    ax1.set_ylabel('Total reps', color=title_text_color, fontsize=10, weight='bold')
+    ax1.set_title(f'Total reps over time', color=title_text_color, weight='bold', fontsize=16, loc='left')
+    ax1.tick_params(axis='x', labelsize=8)
+    ax1.tick_params(axis='y', labelsize=8)
 
     # Set the background color
     ax1.set_facecolor(background_color)
 
     # Create custom legend
+    
     legend_handles = [
-        Patch(color='red', label='2024-01-14'),
-        Patch(color='orange', label='2024-04-29'),
-        Patch(color='lightgrey', label='Other Dates')
+        Patch(color=highlight_color, label='Max'),
+        Patch(color=false_color, label='Min')
     ]
-    ax1.legend(handles=legend_handles, title='Legend')
+    ax1.legend(handles=legend_handles, title='', edgecolor=border_color_2)
 
     # Define the inset plot
-    inset_ax = inset_axes(ax1, width="30%", height="15%", loc="upper left")  # Adjust width, height, and loc as needed
+    inset_ax = inset_axes(ax1, width="25%", height="15%", loc="lower left")  # Adjust width, height, and loc as needed
 
     # Text plot data
-    text = f"Mean change in Total Reps:\n on average"
-    inset_ax.text(0.5, 0.5, text, fontsize=12, ha='center')
+    text = f"Mean change in Total Reps:\non average"
+    inset_ax.text(0.05, 0.9, text, fontsize=8, color=title_text_color, ha='left', va='top')
     inset_ax.set_xticks([])  # Remove x-ticks
     inset_ax.set_yticks([])  # Remove y-ticks
+    inset_ax.patch.set_facecolor('white')
+    inset_ax.patch.set_alpha(0.85)
 
 
     # Set window title
@@ -566,9 +789,9 @@ def workout_details(df1) -> None:
     # df['Total_reps'] = df['Total_reps'].dropna()
     # df = df.dropna(subset=['Date'])
 
-    sns_regplot = sns.regplot(x=np.arange(0, len(df1['Date'])), y=df1['Total_reps'], ax=ax1, marker='.', color='orange',line_kws={
-            'color': 'orange',  # Line color
-            'linestyle': '-',  # Line style (e.g., '--' for dashed line)
+    sns_regplot = sns.regplot(x=np.arange(0, len(df1['Date'])), y=df1['Total_reps'], ax=ax1, marker='.', color=color ,line_kws={
+            'color': highlight_color,  # Line color
+            'linestyle': ':',  # Line style (e.g., '--' for dashed line)
             'linewidth': 1  # Line width
         })
 
@@ -583,25 +806,48 @@ def workout_details(df1) -> None:
 
     df_x['Positive'] = df_x['Change'] >= 0
     # Define the inset plot
-    inset_ax2 = inset_axes(ax1, width="30%", height="15%", loc="lower left")  # Adjust width, height, and loc as needed
+    inset_ax2 = inset_axes(ax1, width="30%", height="15%", loc="upper left")  # Adjust width, height, and loc as needed
 
     # Text plot data
-    text = sns.barplot(data=df_x, y=df_x['Change'], x=df_x['Week'], hue='Positive',palette={True: 'green', False: 'red'}, dodge=False)
-    inset_ax2.set_xticks([])  # Remove x-ticks
-    inset_ax2.set_title('Weekly change in sets volume', weight='normal', loc='right', fontsize=9, color='black')
+    text = sns.barplot(data=df_x, y=df_x['Change'], x=df_x['Week'], hue='Positive',palette={True: true_color, False: false_color}, dodge=False)
+    inset_ax2.set_xlabel('')
+    inset_ax2.set_ylabel('')
+    inset_ax2.tick_params(axis='x', direction='in', labelsize=7, color=title_text_color)
+    inset_ax2.set_yticks([])
+    inset_ax2.set_title('')
     inset_ax2.legend().remove()
+    
+    # Add custom title inside the axes
+    inset_ax2.text(
+        0.05, 0.92, 'Weekly change in sets volume',
+        horizontalalignment='left',
+        verticalalignment='top',
+        transform=inset_ax2.transAxes,
+        weight='normal',
+        fontsize=9,
+        color=title_text_color
+    )
+    
     inset_ax2.patch.set_facecolor('white')
-    inset_ax2.patch.set_alpha(0.7)
+    inset_ax2.patch.set_alpha(0.85)
+
 
     for spine in ax1.spines.values():
-        spine.set_edgecolor(border_color)
+        spine.set_edgecolor('white')
+        
+    for spine in inset_ax.spines.values():
+        spine.set_edgecolor(border_color_2)
     
     for spine in inset_ax2.spines.values():
-        spine.set_edgecolor('lightgrey')
+        spine.set_edgecolor(border_color_2)
+
+
 
     # inset_ax2.set_yticks([])  # Remove y-ticks
     # inset_ax2.axhline(0, color="r", clip_on=False)
 
+
+    plt.gcf().canvas.manager.set_window_title('0X_Workout details  (Gym_log_2024)')
     # Show plot
     plt.show()
 
@@ -610,18 +856,21 @@ def main():
     if df1 is not None and df2 is not None:
         df1, df2 = data_preparation(df1, df2)
 
-        workout_details(df1)
-        consistency_view(df1)
+ 
+           
+        consistency_view(df1)    
+        consistency_view_table(df1) 
+        correlation_view_1(df2)
+        workout_details(df1) # DONE
+        
         body_values(df2)
-        fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-        correlation_waist_v_weight(df2, axes[0])
-        correlation_weight_vs_kcal(df2, axes[1])
-        plt.show()
+
         
         excercise_volumes(df1, body_weight, selected_exercises)
-        sets_view(df1)
+        sets_view(df1)   
+               
         '''
-        
+    
        
 
         '''
