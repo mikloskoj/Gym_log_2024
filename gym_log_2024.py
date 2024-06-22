@@ -18,7 +18,7 @@ border_color = 'white'
 border_color_2 = 'lightgrey'
 background_color = '#fdfcfc'
 color = "#193f71" # color
-false_color = '#840606'
+false_color = '#611A00'
 true_color = '#e0990b'
 highlight_color = '#e0990b'
 highlight_color_2 = '#f9d48a'
@@ -72,83 +72,127 @@ def data_preparation(df1, df2):
 
 def body_values(df2):
 
-    start_date = '2024-04-01'
-    start_date = pd.to_datetime(start_date)
+    start_date = '01.04.2024'
+    start_date = pd.to_datetime(start_date, format='%d.%m.%Y', dayfirst=True)
+    end_date = df2['Date'].max()
     
     df2_bv = df2
     df2_bv = df2_bv[df2_bv['Date'] >= start_date]
+    df2_bv['kcal'] = df2_bv['kcal'].fillna(1)
+    df2_bv['kcal total'] = df2_bv['kcal total'].fillna(1)
 
+    fig = plt.figure(constrained_layout=True, figsize=(12, 10))
+    gs = gridspec.GridSpec(5, 1, figure=fig)
 
-    # Apply moving average to smooth the data
-    df2_bv.loc[:, 'Weight'] = df2_bv['Weight'].rolling(window=1).mean()
-    df2_bv.loc[:, 'Waist'] = df2_bv['Waist'].rolling(window=1).mean()
-    df2_bv.loc[:, 'BMI'] = df2_bv['BMI'].rolling(window=1).mean()
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[1, 0])
+    ax3 = fig.add_subplot(gs[2, 0])
+    ax4 = fig.add_subplot(gs[3:5, 0])  # This subplot spans 2 rows
 
-    # Create a figure and axis
-    fig, ax = plt.subplots(4, 1, figsize=(10, 8))
+    sns.lineplot(data=df2_bv, x='Date', y='Waist', color=line_color, ax=ax1)
+    ax1.set_title('Waist Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
+    ax1.set_xlabel('')
+    ax1.set_ylabel('')
+    ax1.set_xticklabels([])
+    ax1.tick_params(axis='y', labelsize=8)
 
-    sns.lineplot(data=df2_bv, x='Date', y='Waist', color=line_color, ax=ax[0])
-    ax[0].set_title('Waist Over Time', fontweight='bold', fontsize=12, loc='left')
-    ax[0].set_xlabel('')
-    ax[0].set_ylabel('')
-    ax[0].set_xticklabels([])
-    ax[0].tick_params(axis='y', labelsize=8)
+    sns.lineplot(data=df2_bv, x='Date', y='Weight', color=line_color, ax=ax2)
+    ax2.set_title('Weight Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
+    ax2.set_xlabel('')
+    ax2.set_ylabel('')
+    ax2.set_xticklabels([])
+    ax2.tick_params(axis='y', labelsize=8)
 
-    sns.lineplot(data=df2_bv, x='Date', y='Weight', color=line_color, ax=ax[1])
-    ax[1].set_title('Weight Over Time', fontweight='bold', fontsize=12, loc='left')
-    ax[1].set_xlabel('')
-    ax[1].set_ylabel('')
-    ax[1].set_xticklabels([])
-    ax[1].tick_params(axis='y', labelsize=8)
-
-    sns.lineplot(data=df2_bv, x='Date', y='BMI', color=line_color, ax=ax[2])
-    ax[2].set_title('BMI Over Time', fontweight='bold', fontsize=12, loc='left')
-    ax[2].set_xlabel('')
-    ax[2].set_ylabel('')
-    ax[2].set_xticklabels([])
-    ax[2].tick_params(axis='y', labelsize=8)
+    sns.lineplot(data=df2_bv, x='Date', y='BMI', color=line_color, ax=ax3)
+    ax3.set_title('BMI Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
+    ax3.set_xlabel('')
+    ax3.set_ylabel('')
+    ax3.set_xticklabels([])
+    ax3.tick_params(axis='y', labelsize=8)
 
     # Melt the DataFrame for the barplot
     df_melted = df2_bv.melt(id_vars=['Date'], value_vars=['kcal', 'kcal total'], var_name='Type', value_name='Value')
-    custom_palette = {'kcal': line_color, 'kcal total': 'lightgrey'}
+   
+    df_melted_2 = df2_bv.melt(id_vars=['Date'], value_vars=['kcal total'], var_name='Type', value_name='Value')
+    df_melted_trshld_min_val = 1800
+    df_melted_trshld_upper_val = 2000
+    df_melted_trshld_max_val = 2800
+
+    custom_palette = {'kcal': '#f1cb7e', 'kcal total': highlight_color_2}
+    sns.barplot(data=df_melted, x='Date', y='Value', hue='Type', palette=custom_palette, ax=ax4, width=0.8, dodge=True, legend=False)
+
     
-    sns.barplot(data=df_melted, x='Date', y='Value', hue='Type', palette=custom_palette, ax=ax[3])
-    ax[3].set_title('Caloric Intake Over Time', fontweight='bold', fontsize=12, loc='left')
-    ax[3].set_xlabel('')
-    ax[3].set_ylabel('')
-    ax[3].set_xticklabels([])
-    ax[3].tick_params(axis='y', labelsize=8)
-    ax[3].axhline(1800, color='#112c50', linestyle='--', linewidth=1)
-    ax[3].axhline(2000, color='#112c50', linestyle='--', linewidth=1)
     
     # Create custom Line2D objects for the legend
-    line1 = Line2D([0], [0], color='#112c50', linestyle='--', linewidth=1, label='1800 Cal')
-    line2 = Line2D([0], [0], color='#112c50', linestyle='--', linewidth=1, label='2000 Cal')
+    line1 = Line2D([0], [0], color=highlight_color, linestyle='-', linewidth=3, label=f'{df_melted_trshld_min_val} kcal')
+    line2 = Line2D([0], [0], color=false_color, linestyle='-', linewidth=3, label=f'{df_melted_trshld_upper_val} kcal')
+    line3 = Line2D([0], [0], color='lightgrey', linestyle='-', linewidth=3, label=f'kcal total')
+
 
     # Add the custom lines to the legend
-    handles, labels = ax[3].get_legend_handles_labels()
-    handles.extend([line1, line2])
-    labels.extend(['lower limit', 'upper limit'])
+    handles, labels = ax4.get_legend_handles_labels()
+    handles.extend([line1, line3])
+    labels.extend(['Caloric intake exempt workouts', 'Total kcal intake'])
+
+    ax4.legend(handles=handles, labels=labels, fontsize=8, title_fontsize='10', frameon=False, framealpha=0.9, facecolor='white', edgecolor='lightgrey')
     
-    ax[3].legend(handles=handles, labels=labels, fontsize=8, title_fontsize='10', frameon=True, framealpha=0.9, facecolor='white', edgecolor='black')
+    for i, bar in enumerate(ax4.patches):
+        value = bar.get_height()
+        bar_type = df_melted.iloc[i % len(df_melted)]['Type']
+        if value > df_melted_trshld_max_val and df_melted.iloc[i % len(df_melted)]['Type'] == 'kcal':
+            bar.set_color(highlight_color)
+            bar.set_width(0.8)
+            bar.set_edgecolor(None)
+            bar.set_linewidth(None)
+            bar.set_hatch('')
+        elif value > df_melted_trshld_upper_val and df_melted.iloc[i % len(df_melted)]['Type'] == 'kcal':
+            bar.set_color(highlight_color_2)
+            bar.set_width(0.8)
+            bar.set_edgecolor(None)
+            bar.set_linewidth(None)
+            bar.set_hatch('')
+        elif value < df_melted_trshld_min_val and df_melted.iloc[i % len(df_melted)]['Type'] == 'kcal':
+            bar.set_color('#e0d3b8')
+            bar.set_width(0.8)
+            bar.set_edgecolor(None)
+            bar.set_linewidth(None)
+            bar.set_hatch('')
+        elif bar_type == 'kcal total':
+            bar.set_color(background_color)
+            bar.set_edgecolor('lightgrey')
+            bar.set_linewidth(0.2)
+            bar.set_hatch('/////')
+            
 
-    # legend = ax[3].legend(loc='upper left', title='Caloric Type', fontsize=8, title_fontsize='10', frameon=True, framealpha=0.9, facecolor='white', edgecolor='black')
-    # legend.set_bbox_to_anchor((0, 1))
 
-    for a in ax[0:]:
+    ax4.set_title('Caloric Intake Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
+    ax4.set_xlabel('')
+    ax4.set_ylabel('')
+    ax4.tick_params(axis='x', labelsize=5)
+    ax4.tick_params(axis='y', labelsize=8)
+    ax4.xaxis.set_major_locator(mdates.DayLocator(interval=10))
+    ax4.axhline(df_melted_trshld_min_val, color=highlight_color_2, linestyle='--', linewidth=0.5, alpha=0.5)
+    ax4.axhline(df_melted_trshld_upper_val, color=highlight_color, linestyle='--', linewidth=0.5, alpha=0.5)
+    ax4.axhline(df_melted_trshld_max_val, color=false_color, linestyle='--', linewidth=0.5, alpha=0.5)
+    ax4.set_facecolor('lightblue')
+    
+    for a in [ax1, ax2, ax3, ax4]:
         a.spines['top'].set_color(border_color)
         a.spines['right'].set_color(border_color)
         a.spines['bottom'].set_color(border_color)
         a.spines['left'].set_color(border_color)
         sns.despine(ax=a, top=False, bottom=False, left=False, right=False)
         a.set_facecolor(background_color)
-
-    plt.tight_layout()
-    plt.gcf().canvas.manager.set_window_title('0X_Body macros (Gym_log_2024)')
+    fig.suptitle('\nBody Macros View', fontsize=18, color=title_text_color)
+    start_date = start_date.strftime('%d.%m.%Y')
+    end_date = end_date.strftime('%d.%m.%Y')
+    fig.text(0.5, 0.88, f'*This view shows change of body macros over time\nwith calories consumed and burned with workout.\n\nDataframe is in the range from {start_date} to {end_date}', ha='center', fontsize=8, style='italic')
+    # plt.subplots_adjust(hspace=0.4, wspace=0)
+    plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
     plt.show()
 
 
-def correlation_view_1(df2) -> None:
+def correlation_view(df2) -> None:
     df_corr_1 = df2[['Waist', 'Weight']].dropna()
     df_corr_1['Waist_MA'] = df_corr_1['Waist'].rolling(window=7).mean()
     df_corr_1['Weight_MA'] = df_corr_1['Weight'].rolling(window=7).mean()
@@ -161,7 +205,7 @@ def correlation_view_1(df2) -> None:
     print(correlation_matrix)
 
     sns.heatmap(ax=ax1, data=correlation_matrix, annot=True, cmap=color_palette, center=0)
-    ax1.set_title("Waist vs. Weight Correlation Matrix")
+    ax1.set_title("Waist vs. Weight Correlation Matrix", ha='center', fontsize=10, fontweight='bold', color=title_text_color)
 
     # -------------------------------------------------------
 
@@ -178,11 +222,20 @@ def correlation_view_1(df2) -> None:
     print(correlation_matrix2)
 
     sns.heatmap(ax=ax2, data=correlation_matrix2, annot=True, cmap=color_palette, center=0)
-    ax2.set_title("Weight vs. Kcal Correlation Matrix Heatmap with Moving Averages")
+    ax2.set_title("Weight vs. Kcal Correlation Matrix Heatmap with Moving Averages", ha='center', fontsize=10, fontweight='bold', color=title_text_color)
 
+    fig.suptitle('\nCorrelation view', fontsize=18, color=title_text_color)
+    fig.text(0.5, 0.88, '*This view shows correlation between amount of consumed calories and body macros.', ha='center', fontsize=8, style='italic')
+    
 
+    plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
+    plt.subplots_adjust(hspace=0.1, wspace=0.23)
     plt.gcf().canvas.manager.set_window_title('0X_Correlation view (Gym_log_2024)')
     plt.show()
+
+
+def day_of_the_week(df1) -> None:
+    print(f'Day of the week')    
 
 
 def sets_view(df1, window=8) -> None:
@@ -233,7 +286,7 @@ def sets_view(df1, window=8) -> None:
     month_colors = [highlight_color if date == highlight_date_2 else
             color for date in df_monthly['Month']]
     day_colors = [highlight_color if date == highlight_date_3 else
-            color for date in df_daily['Date']]
+            'lightgrey' for date in df_daily['Date']]
     
     
     
@@ -255,7 +308,7 @@ def sets_view(df1, window=8) -> None:
         palette=month_colors,
         ax=ax0
     )
-    ax0.set_title('Monthly Sets', fontweight='bold', fontsize=12)
+    ax0.set_title('Monthly Sets', fontsize=14, color=title_text_color, ha='center')
     ax0.legend().remove()
     ax0.set_xlabel('Month',fontsize=6)
     ax0.tick_params(axis='x', labelsize=8)
@@ -269,7 +322,7 @@ def sets_view(df1, window=8) -> None:
         palette=week_colors,
         ax=ax1
     )
-    ax1.set_title('Weekly Sets', fontweight='bold', fontsize=12)
+    ax1.set_title('Weekly Sets', fontsize=14, color=title_text_color, ha='center')
     ax1.set_ylabel('')
     ax1.set_xlabel('Week',fontsize=6)
     ax1.legend().remove()
@@ -283,13 +336,14 @@ def sets_view(df1, window=8) -> None:
         palette=day_colors,
         ax=ax2
     )
+
     
     '''
             hue='Sets',
         palette=color_palette,
     '''
     
-    ax2.set_title('Daily Sets', fontweight='bold', fontsize=12)
+    ax2.set_title('Daily Sets', fontsize=14, color=title_text_color, ha='center')
     ax2.set_ylabel('Sets')
     ax2.set_xlabel('',fontsize=6)
     # ax2.legend().remove()
@@ -305,7 +359,11 @@ def sets_view(df1, window=8) -> None:
 
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
+    fig.suptitle('\nSets Consistency View', fontsize=18, color=title_text_color)
+    fig.text(0.5, 0.90, '*Cardio workouts were exempt from the dataset.', ha='center', fontsize=8, style='italic')
     plt.gcf().canvas.manager.set_window_title('0X_Sets view (Gym_log_2024)')
+    plt.subplots_adjust(hspace=-0.2, wspace=-0.1)
+    plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
     plt.show()
 
 def excercise_volumes(df1, body_weight, selected_exercises, window=8):
@@ -346,7 +404,7 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
     ax1.tick_params(axis='x', rotation=45)
     ax1.set_xlabel('')
     ax1.set_ylabel('Total Reps')
-    ax1.set_title('Total Reps Over Time', fontweight='bold')
+    ax1.set_title('Total Reps Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
 
     sns.barplot(
         data=top_exercises.reset_index(),
@@ -358,7 +416,7 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
 
     ax2.set_xlabel('')
     ax2.set_ylabel('Total Reps')
-    ax2.set_title('Total Reps Lifted Over Time', fontweight='bold')
+    ax2.set_title('Total Reps Lifted Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
 
     table_data = top_exercises.reset_index()
     table = ax2.table(cellText=table_data.values, colLabels=table_data.columns, cellLoc='center', loc='bottom', bbox=[0, -0.5, 1, 0.34])
@@ -370,10 +428,13 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
         cell.set_edgecolor(border_color)
         cell.set_linewidth(0.5)
         if key[0] == 0:
-            cell.set_text_props(weight='bold', color='white', fontsize=6)
-            cell.set_facecolor('#40466e')
+            cell.set_text_props(weight='bold', color='grey', fontsize=7)
+            cell.set_facecolor('lightgrey')
+            cell.set_height(1.5)
         else:
-            cell.set_facecolor('#f2f2f2')
+            cell.set_facecolor(background_color)
+            cell.set_text_props(weight='normal', color=title_text_color, fontsize=6)
+            cell.set_height(0.7)
 
     plt.subplots_adjust(left=0.1, bottom=0.2)
 
@@ -384,7 +445,13 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
 
     fig.text(0.95, 0.1, f'Gym Workout Analysis Q1 2024\nThis shows the total volumes I have lifted since 1st of January.\nI hope you like my charts and everything is clear.\nselected_exercises: {selected_exercises} were excluded.', ha='right', va='center', fontsize=10, fontweight='normal')
     plt.gcf().canvas.manager.set_window_title('0X_Workout volumes (Gym_log_2024)')
-    plt.tight_layout()
+    
+    fig.suptitle('\nExercise Volumes View', fontsize=18, color=title_text_color)
+    fig.text(0.5, 0.90, '*Cardio workouts were exempt from the dataset.', ha='center', fontsize=8, style='italic')
+
+    
+    plt.subplots_adjust(hspace=-0.2, wspace=-0.1)
+    plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
     plt.show()
 
 def consistency_view_table(df1) -> None:
@@ -783,13 +850,12 @@ def workout_details(df1) -> None:
     inset_ax.patch.set_alpha(0.85)
 
 
-    # Set window title
-    plt.gcf().canvas.manager.set_window_title('02_Gym Log Data Visualization')
+
 
     # df['Total_reps'] = df['Total_reps'].dropna()
     # df = df.dropna(subset=['Date'])
 
-    sns_regplot = sns.regplot(x=np.arange(0, len(df1['Date'])), y=df1['Total_reps'], ax=ax1, marker='.', color=color ,line_kws={
+    sns_regplot = sns.regplot(x=np.arange(0, len(df1['Date'])), y=df1['Total_reps'], ax=ax1, marker='', color=color ,line_kws={
             'color': highlight_color,  # Line color
             'linestyle': ':',  # Line style (e.g., '--' for dashed line)
             'linewidth': 1  # Line width
@@ -857,20 +923,20 @@ def main():
         df1, df2 = data_preparation(df1, df2)
 
  
-           
-        consistency_view(df1)    
-        consistency_view_table(df1) 
-        correlation_view_1(df2)
-        workout_details(df1) # DONE
-        
-        body_values(df2)
 
         
-        excercise_volumes(df1, body_weight, selected_exercises)
-        sets_view(df1)   
+        excercise_volumes(df1, body_weight, selected_exercises)    
                
         '''
-    
+        workout_details(df1) # DONE         
+
+        consistency_view(df1)    
+        consistency_view_table(df1) # DONE  
+        sets_view(df1)  
+        body_values(df2) # DONE  
+        
+        day_of_the_week(df1) 
+        correlation_view(df2)   
        
 
         '''
