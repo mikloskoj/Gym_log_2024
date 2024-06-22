@@ -235,8 +235,68 @@ def correlation_view(df2) -> None:
 
 
 def day_of_the_week(df1) -> None:
-    print(f'Day of the week')    
+    
+    df1['Date'] = pd.to_datetime(df1['Date'])
+    df1['Day_of_week'] = df1['Date'].dt.dayofweek + 1
+    df1_weeks = df1.copy()
+    df1_weeks = df1_weeks[['Date', 'Day_of_week', 'Sets', 'Week']]
+    df1_weeks = df1_weeks.groupby(['Date', 'Day_of_week', 'Week'])['Sets'].sum().reset_index()
+    date_range = pd.date_range(start=df1['Date'].min(), end=df1['Date'].max())
+    df1_weeks = df1_weeks.set_index('Date').reindex(date_range).reset_index().rename(columns={'index': 'Date'})
+    df1_weeks['Day_of_week'] = df1_weeks['Date'].dt.dayofweek + 1
 
+    df1_weeks_gr = df1_weeks.groupby(['Week', 'Day_of_week'])['Sets'].sum().unstack(fill_value=0)
+
+    df1_weeks_2 = df1_weeks.groupby(['Day_of_week'])['Sets'].sum().copy()
+    day_of_week_max = df1_weeks_2.sort_values(ascending=False).idxmax()
+    day_of_week_max_value = df1_weeks_2.sort_values(ascending=False).max()
+
+    # Create figure and axes
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 7))
+
+    # Bar plot on the first axis
+    bars = sns.barplot(ax=ax1, x=df1_weeks_2.index, y=df1_weeks_2.values, hue=df1_weeks_2.values, palette=color_palette)
+
+    ax1.get_legend().remove()
+    ax1.tick_params(axis='y', labelsize=8)
+    ax1.tick_params(axis='x', labelsize=8)
+    ax1.set_xlabel('Day of the week')
+    ax1.set_ylabel('Sum of sets', fontsize=6)
+    ax1.set_title('Sets grouped by days of the week', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
+    
+    # Highlight the bar with the maximum sets in yellow
+    for bar, day in zip(bars.patches, df1_weeks_2.index):
+        if day == day_of_week_max:
+            bar.set_facecolor(highlight_color)
+
+    # Mask the values that are 0 or NaN
+    mask = (df1_weeks_gr == 0) | (df1_weeks_gr.isnull())
+
+    # Heatmap on the second axis
+    sns.heatmap(ax=ax2, data=df1_weeks_gr, cmap=color_palette, annot=False, fmt=".1f", cbar=True, linewidths=0.2, linecolor='lightgrey', square=True, robust=True, xticklabels=1, yticklabels=1, mask=mask)
+
+ 
+    ax2.tick_params(axis='y', labelsize=8)
+    ax2.tick_params(axis='x', labelsize=8)
+    ax2.set_xlabel('Day of the week')
+    ax2.set_ylabel('Week', fontsize=6)
+    ax2.set_title('Daily view', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
+
+    # Set face color for both axes
+    for ax in [ax1, ax2]:
+        ax.set_facecolor(background_color)
+        for spine in ax.spines.values():
+            spine.set_edgecolor(border_color)
+
+    # Title and text
+    fig.suptitle('\nDay of the week', fontsize=18)
+    fig.text(0.5, 0.89, '*Analyze days of workouts', ha='center', fontsize=8, style='italic')
+
+    # Customize the figure window title
+    plt.gcf().canvas.manager.set_window_title('0X_day_of_the_week_view (Gym_log_2024)')
+    plt.subplots_adjust(hspace=-0.2, wspace=-0.1)
+    plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
+    plt.show()
 
 def sets_view(df1, window=8) -> None:
  
@@ -414,6 +474,8 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
         palette=color_mapping
     )
 
+
+
     ax2.set_xlabel('')
     ax2.set_ylabel('Total Reps')
     ax2.set_title('Total Reps Lifted Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
@@ -434,7 +496,7 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
         else:
             cell.set_facecolor(background_color)
             cell.set_text_props(weight='normal', color=title_text_color, fontsize=6)
-            cell.set_height(0.7)
+            cell.set_height(0.8)
 
     plt.subplots_adjust(left=0.1, bottom=0.2)
 
@@ -925,17 +987,17 @@ def main():
  
 
         
-        excercise_volumes(df1, body_weight, selected_exercises)    
-               
+           
+        day_of_the_week(df1)        
         '''
         workout_details(df1) # DONE         
-
+        excercise_volumes(df1, body_weight, selected_exercises) 
         consistency_view(df1)    
         consistency_view_table(df1) # DONE  
         sets_view(df1)  
         body_values(df2) # DONE  
         
-        day_of_the_week(df1) 
+        
         correlation_view(df2)   
        
 
