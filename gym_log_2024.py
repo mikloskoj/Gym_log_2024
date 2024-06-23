@@ -22,6 +22,7 @@ false_color = '#611A00'
 true_color = '#e0990b'
 highlight_color = '#e0990b'
 highlight_color_2 = '#f9d48a'
+# color_palette = sns.color_palette(palette='bone_r')
 color_palette = sns.dark_palette(color, reverse=True, as_cmap=True)
 max_color_value  = '#002347'
 
@@ -198,38 +199,64 @@ def correlation_view(df2) -> None:
     df_corr_1['Weight_MA'] = df_corr_1['Weight'].rolling(window=7).mean()
     df_corr_1 = df_corr_1.dropna()
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+    # Create a figure with specific size
+    fig = plt.figure(figsize=(12, 6))
+    gs = gridspec.GridSpec(2, 2, height_ratios=[1, 1])
+    ax1 = fig.add_subplot(gs[0, 0])  # First row, first column
+    ax2 = fig.add_subplot(gs[1, 0])  # Second row, first column
+    ax3 = fig.add_subplot(gs[:, 1])  # Span the entire second column
+
 
     correlation_matrix = df_corr_1[['Waist_MA', 'Weight_MA']].corr()
-    print("Waist vs. Weight Correlation Matrix")
-    print(correlation_matrix)
-
-    sns.heatmap(ax=ax1, data=correlation_matrix, annot=True, cmap=color_palette, center=0)
-    ax1.set_title("Waist vs. Weight Correlation Matrix", ha='center', fontsize=10, fontweight='bold', color=title_text_color)
-
+    sns.heatmap(ax=ax1, data=correlation_matrix, annot=True, cmap=color_palette, center=0, square=True, fmt='.2f', annot_kws={'size': 8, 'weight': 'bold', 'color': 'white'})
+    ax1.set_title("Waist vs. Weight Correlation Matrix", ha='left', fontsize=8, fontweight='normal', color=title_text_color, x=0)
+    ax1.tick_params(axis='y', labelsize=8)
+    ax1.tick_params(axis='x', labelsize=8)
+    
     # -------------------------------------------------------
 
     df_corr_2 = df2[['Weight', 'kcal']].dropna()
-    print("Data for correlation_weight_vs_kcal before moving average:\n", df_corr_2.head())  # Debug print
-
     df_corr_2['Weight_MA'] = df_corr_2['Weight'].rolling(window=7).mean()
     df_corr_2['kcal_MA'] = df_corr_2['kcal'].rolling(window=7).mean()
     df_corr_2 = df_corr_2.dropna()
-    print("Data for correlation_weight_vs_kcal after moving average:\n", df_corr_2.head())  # Debug print
 
     correlation_matrix2 = df_corr_2[['Weight_MA', 'kcal_MA']].corr()
-    print("Correlation Matrix for Weight vs. Kcal with Moving Averages:")
-    print(correlation_matrix2)
+    sns.heatmap(ax=ax2, data=correlation_matrix2, annot=True, cmap=color_palette, center=0, square=True, fmt='.2f', annot_kws={'size': 8, 'weight': 'bold', 'color': 'white'})
+    ax2.set_title("Weight vs. Kcal Correlation Matrix", ha='left', fontsize=8, fontweight='normal', color=title_text_color, x=0)
+    ax2.tick_params(axis='y', labelsize=8)
+    ax2.tick_params(axis='x', labelsize=8)
 
-    sns.heatmap(ax=ax2, data=correlation_matrix2, annot=True, cmap=color_palette, center=0)
-    ax2.set_title("Weight vs. Kcal Correlation Matrix Heatmap with Moving Averages", ha='center', fontsize=10, fontweight='bold', color=title_text_color)
+    # -------------------------------------------------------
+    ax3.axis('off')  # Turn off the axis
+    multi_line_text = """
+    When using sns.heatmap with Seaborn, you have a variety of settings you can adjust to customize
+    the appearance of your heatmap. 
+    Here are some key parameters you might find useful:
+
+    vmin and vmax: These set the data range that the colormap covers.
+    linewidths: This sets the width of the lines that will divide each cell.
+    linecolor: This sets the color of the lines that will divide each cell.
+    cbar: If set to False, it will hide the color bar.
+    cbar_kws: A dictionary of keyword arguments to pass to the color bar.
+    square: If True, sets the cells to be square.
+    xticklabels and yticklabels: Can be set to True, False, or a list of labels to use for the x and y ticks.
+    mask: An array of the same shape as the data, where True cells will be masked (not colored).
+    fmt: String formatting code to use when adding annotations.
+    annot_kws: A dictionary of keyword arguments to pass to ax.text when annotating.
+    """
+
+    ax3.text(0.05, 0.5, multi_line_text, ha='left', va='center', fontsize=7, wrap=True)
 
     fig.suptitle('\nCorrelation view', fontsize=18, color=title_text_color)
     fig.text(0.5, 0.88, '*This view shows correlation between amount of consumed calories and body macros.', ha='center', fontsize=8, style='italic')
-    
 
-    plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
-    plt.subplots_adjust(hspace=0.1, wspace=0.23)
+
+    # plt.tight_layout(rect=[0.1, 0.05, 0.99, 0.95])
+    # plt.subplots_adjust(hspace=0.2, wspace=0.23)
+    plt.tight_layout(rect=[0.1, 0.03, 0.95, 0.98])
+
+    plt.subplots_adjust(hspace=0.5, wspace=0.2)
+    
     plt.gcf().canvas.manager.set_window_title('0X_Correlation view (Gym_log_2024)')
     plt.show()
 
@@ -260,9 +287,9 @@ def day_of_the_week(df1) -> None:
     ax1.get_legend().remove()
     ax1.tick_params(axis='y', labelsize=8)
     ax1.tick_params(axis='x', labelsize=8)
-    ax1.set_xlabel('Day of the week')
-    ax1.set_ylabel('Sum of sets', fontsize=6)
-    ax1.set_title('Sets grouped by days of the week', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
+    ax1.set_xlabel('Day of the week', fontsize=8)
+    ax1.set_ylabel('Sum of sets', fontsize=8)
+    ax1.set_title('Sets grouped by days of the week', ha='left', fontsize=12, fontweight='normal', color=title_text_color, x=0)
     
     # Highlight the bar with the maximum sets in yellow
     for bar, day in zip(bars.patches, df1_weeks_2.index):
@@ -278,9 +305,9 @@ def day_of_the_week(df1) -> None:
  
     ax2.tick_params(axis='y', labelsize=8)
     ax2.tick_params(axis='x', labelsize=8)
-    ax2.set_xlabel('Day of the week')
-    ax2.set_ylabel('Week', fontsize=6)
-    ax2.set_title('Daily view', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
+    ax2.set_xlabel('Day of the week', fontsize=8)
+    ax2.set_ylabel('Week', fontsize=8)
+    ax2.set_title('Daily view', ha='left', fontsize=12, fontweight='normal', color=title_text_color, x=0)
 
     # Set face color for both axes
     for ax in [ax1, ax2]:
@@ -984,21 +1011,17 @@ def main():
     if df1 is not None and df2 is not None:
         df1, df2 = data_preparation(df1, df2)
 
- 
-
         
-           
-        day_of_the_week(df1)        
+        correlation_view(df2)     
         '''
+           
+        day_of_the_week(df1)      
         workout_details(df1) # DONE         
         excercise_volumes(df1, body_weight, selected_exercises) 
         consistency_view(df1)    
         consistency_view_table(df1) # DONE  
         sets_view(df1)  
         body_values(df2) # DONE  
-        
-        
-        correlation_view(df2)   
        
 
         '''
