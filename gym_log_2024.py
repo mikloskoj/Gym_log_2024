@@ -232,20 +232,9 @@ def correlation_view(df2) -> None:
     # -------------------------------------------------------
     ax3.axis('off')  # Turn off the axis
     multi_line_text = """
-    When using sns.heatmap with Seaborn, you have a variety of settings you can adjust to customize
-    the appearance of your heatmap. 
-    Here are some key parameters you might find useful:
-
-    vmin and vmax: These set the data range that the colormap covers.
-    linewidths: This sets the width of the lines that will divide each cell.
-    linecolor: This sets the color of the lines that will divide each cell.
-    cbar: If set to False, it will hide the color bar.
-    cbar_kws: A dictionary of keyword arguments to pass to the color bar.
-    square: If True, sets the cells to be square.
-    xticklabels and yticklabels: Can be set to True, False, or a list of labels to use for the x and y ticks.
-    mask: An array of the same shape as the data, where True cells will be masked (not colored).
-    fmt: String formatting code to use when adding annotations.
-    annot_kws: A dictionary of keyword arguments to pass to ax.text when annotating.
+    Summary:
+    The first matrix shows a strong positive correlation between waist measurements and weight.
+    The second matrix shows a weak positive correlation between weight and kilocalories consumed.
     """
 
     ax3.text(0.05, 0.5, multi_line_text, ha='left', va='center', fontsize=7, wrap=True)
