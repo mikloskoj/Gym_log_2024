@@ -23,7 +23,10 @@ true_color = '#e0990b'
 highlight_color = '#e0990b'
 highlight_color_2 = '#f9d48a'
 # color_palette = sns.color_palette(palette='bone_r')
-color_palette = sns.dark_palette(color, reverse=True, as_cmap=True)
+
+# color_palette = sns.dark_palette(color, reverse=True, as_cmap=True)
+
+color_palette = sns.dark_palette("#69d", reverse=True, as_cmap=True)
 max_color_value  = '#002347'
 
 line_color = color
@@ -208,7 +211,7 @@ def correlation_view(df2) -> None:
 
 
     correlation_matrix = df_corr_1[['Waist_MA', 'Weight_MA']].corr()
-    sns.heatmap(ax=ax1, data=correlation_matrix, annot=True, cmap=color_palette, center=0, square=True, fmt='.2f', annot_kws={'size': 8, 'weight': 'bold', 'color': 'white'})
+    sns.heatmap(ax=ax1, data=correlation_matrix, annot=True, cmap=sns.dark_palette("#69d", reverse=True, as_cmap=True), center=0, square=True, fmt='.2f', vmin=0, vmax=1, annot_kws={'size': 8, 'weight': 'bold', 'color': 'white'})
     ax1.set_title("Waist vs. Weight Correlation Matrix", ha='left', fontsize=8, fontweight='normal', color=title_text_color, x=0)
     ax1.tick_params(axis='y', labelsize=8)
     ax1.tick_params(axis='x', labelsize=8)
@@ -221,7 +224,7 @@ def correlation_view(df2) -> None:
     df_corr_2 = df_corr_2.dropna()
 
     correlation_matrix2 = df_corr_2[['Weight_MA', 'kcal_MA']].corr()
-    sns.heatmap(ax=ax2, data=correlation_matrix2, annot=True, cmap=color_palette, center=0, square=True, fmt='.2f', annot_kws={'size': 8, 'weight': 'bold', 'color': 'white'})
+    sns.heatmap(ax=ax2, data=correlation_matrix2, annot=True, cmap=sns.dark_palette("#69d", reverse=True, as_cmap=True), center=0, square=True, fmt='.2f',vmin=0, vmax=1, annot_kws={'size': 8, 'weight': 'bold', 'color': 'white'})
     ax2.set_title("Weight vs. Kcal Correlation Matrix", ha='left', fontsize=8, fontweight='normal', color=title_text_color, x=0)
     ax2.tick_params(axis='y', labelsize=8)
     ax2.tick_params(axis='x', labelsize=8)
@@ -473,18 +476,20 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
     grouped_df['total_reps_ma'] = grouped_df.groupby('Exercise name')['total_reps'].transform(lambda x: x.rolling(window=window, min_periods=1).mean())
 
     unique_exercises = top_exercises.index
-    palette = sns.dark_palette(color, len(unique_exercises))
+    palette = sns.color_palette("cubehelix", len(unique_exercises))
     color_mapping = dict(zip(unique_exercises, palette))
+
 
     fig, (ax2, ax1) = plt.subplots(1, 2, figsize=(14, 7))
 
+    # Create the plot
     sns.lineplot(
         ax=ax1,
         data=grouped_df,
         x='Date',
         y='total_reps_ma',
         hue='Exercise name',
-        palette=color_mapping, 
+        palette=color_mapping,  # Use the predefined line_colors list
         marker='v'
     )
 
@@ -494,7 +499,7 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
     ax1.set_title('Total Reps Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
 
     sns.barplot(
-        data=top_exercises.reset_index(),
+        data=top_exercises,
         x='Exercise name',
         y='total_reps',
         ax=ax2, hue='Exercise name',
@@ -1011,18 +1016,20 @@ def main():
     if df1 is not None and df2 is not None:
         df1, df2 = data_preparation(df1, df2)
 
-        
+             
+
+        excercise_volumes(df1, body_weight, selected_exercises) 
         correlation_view(df2)     
-        '''
-           
         day_of_the_week(df1)      
         workout_details(df1) # DONE         
-        excercise_volumes(df1, body_weight, selected_exercises) 
+        sets_view(df1)
         consistency_view(df1)    
         consistency_view_table(df1) # DONE  
-        sets_view(df1)  
+        
         body_values(df2) # DONE  
-       
+        '''
+           
+
 
         '''
 
