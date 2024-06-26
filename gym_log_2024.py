@@ -22,13 +22,8 @@ false_color = '#611A00'
 true_color = '#e0990b'
 highlight_color = '#e0990b'
 highlight_color_2 = '#f9d48a'
-# color_palette = sns.color_palette(palette='bone_r')
-
-# color_palette = sns.dark_palette(color, reverse=True, as_cmap=True)
-
 color_palette = sns.dark_palette("#69d", reverse=True, as_cmap=True)
 max_color_value  = '#002347'
-
 line_color = color
 title_text_color = '#454545'
 selected_exercises = ('Kneeling dip', 'Bench press', 'Chest press', 'Prone leg curl', 'Lat pulldown', 'Bicep curl')
@@ -48,6 +43,7 @@ def load_data(file_path_1, file_path_2):
         return df1, None
     
     return df1, df2
+
 
 def data_preparation(df1, df2):
     
@@ -73,6 +69,7 @@ def data_preparation(df1, df2):
 
 
     return df1, df2
+
 
 def body_values(df2):
 
@@ -172,7 +169,7 @@ def body_values(df2):
     ax4.set_title('Caloric Intake Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
     ax4.set_xlabel('')
     ax4.set_ylabel('')
-    ax4.tick_params(axis='x', labelsize=5)
+    ax4.tick_params(axis='x', labelsize=8)
     ax4.tick_params(axis='y', labelsize=8)
     ax4.xaxis.set_major_locator(mdates.DayLocator(interval=10))
     ax4.axhline(df_melted_trshld_min_val, color=highlight_color_2, linestyle='--', linewidth=0.5, alpha=0.5)
@@ -267,11 +264,17 @@ def day_of_the_week(df1) -> None:
     df1_weeks_gr = df1_weeks.groupby(['Week', 'Day_of_week'])['Sets'].sum().unstack(fill_value=0)
 
     df1_weeks_2 = df1_weeks.groupby(['Day_of_week'])['Sets'].sum().copy()
+    df1_weeks_3 = df1_weeks.groupby(['Day_of_week'])['Sets'].mean().copy()
     day_of_week_max = df1_weeks_2.sort_values(ascending=False).idxmax()
     day_of_week_max_value = df1_weeks_2.sort_values(ascending=False).max()
 
     # Create figure and axes
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 7))
+    fig = plt.figure(figsize=(11, 7))  # Create a figure
+    gs = gridspec.GridSpec(2, 2, height_ratios=[1, 2])  # Create a gridspec with specific ratios
+
+    ax1 = plt.subplot(gs[0, 0])  # Top row, first column
+    ax2 = plt.subplot(gs[1, 0])  # Top row, second column
+    ax3 = plt.subplot(gs[:, 1])  # Bottom row, spans both columns
 
     # Bar plot on the first axis
     bars = sns.barplot(ax=ax1, x=df1_weeks_2.index, y=df1_weeks_2.values, hue=df1_weeks_2.values, palette=color_palette)
@@ -281,41 +284,55 @@ def day_of_the_week(df1) -> None:
     ax1.tick_params(axis='x', labelsize=8)
     ax1.set_xlabel('Day of the week', fontsize=8)
     ax1.set_ylabel('Sum of sets', fontsize=8)
-    ax1.set_title('Sets grouped by days of the week', ha='left', fontsize=12, fontweight='normal', color=title_text_color, x=0)
+    ax1.set_title('Sets grouped by days of the week - Sum', ha='left', fontsize=12, fontweight='normal', color=title_text_color, x=0)
+    
+    # Bar plot on the first axis
+    bars2 = sns.barplot(ax=ax2, x=df1_weeks_3.index, y=df1_weeks_3.values, hue=df1_weeks_3.values, palette=color_palette)
+
+    ax2.get_legend().remove()
+    ax2.tick_params(axis='y', labelsize=8)
+    ax2.tick_params(axis='x', labelsize=8)
+    ax2.set_xlabel('Day of the week', fontsize=8)
+    ax2.set_ylabel('Mean of sets', fontsize=8)
+    ax2.set_title('Sets grouped by days of the week - Mean', ha='left', fontsize=12, fontweight='normal', color=title_text_color, x=0)
     
     # Highlight the bar with the maximum sets in yellow
     for bar, day in zip(bars.patches, df1_weeks_2.index):
         if day == day_of_week_max:
             bar.set_facecolor(highlight_color)
+    for bar, day in zip(bars2.patches, df1_weeks_3.index):
+        if day == day_of_week_max:
+            bar.set_facecolor(highlight_color)        
 
     # Mask the values that are 0 or NaN
     mask = (df1_weeks_gr == 0) | (df1_weeks_gr.isnull())
 
     # Heatmap on the second axis
-    sns.heatmap(ax=ax2, data=df1_weeks_gr, cmap=color_palette, annot=False, fmt=".1f", cbar=True, linewidths=0.2, linecolor='lightgrey', square=True, robust=True, xticklabels=1, yticklabels=1, mask=mask)
+    sns.heatmap(ax=ax3, data=df1_weeks_gr, cmap=color_palette, annot=False, fmt=".1f", cbar=True, linewidths=0.2, linecolor='lightgrey', square=True, robust=True, xticklabels=1, yticklabels=1, mask=mask)
 
  
-    ax2.tick_params(axis='y', labelsize=8)
-    ax2.tick_params(axis='x', labelsize=8)
-    ax2.set_xlabel('Day of the week', fontsize=8)
-    ax2.set_ylabel('Week', fontsize=8)
-    ax2.set_title('Daily view', ha='left', fontsize=12, fontweight='normal', color=title_text_color, x=0)
+    ax3.tick_params(axis='y', labelsize=8)
+    ax3.tick_params(axis='x', labelsize=8)
+    ax3.set_xlabel('Day of the week', fontsize=8)
+    ax3.set_ylabel('Week', fontsize=8)
+    ax3.set_title('Daily view', ha='left', fontsize=12, fontweight='normal', color=title_text_color, x=0)
 
     # Set face color for both axes
-    for ax in [ax1, ax2]:
+    for ax in [ax1, ax2, ax3]:
         ax.set_facecolor(background_color)
         for spine in ax.spines.values():
             spine.set_edgecolor(border_color)
 
     # Title and text
     fig.suptitle('\nDay of the week', fontsize=18)
-    fig.text(0.5, 0.89, '*Analyze days of workouts', ha='center', fontsize=8, style='italic')
+    fig.text(0.5, 0.89, '*The largest volumes were recorded on a Sunday.', ha='center', fontsize=8, style='italic')
 
     # Customize the figure window title
     plt.gcf().canvas.manager.set_window_title('0X_day_of_the_week_view (Gym_log_2024)')
     plt.subplots_adjust(hspace=-0.2, wspace=-0.1)
     plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
     plt.show()
+
 
 def sets_view(df1, window=8) -> None:
  
@@ -445,6 +462,7 @@ def sets_view(df1, window=8) -> None:
     plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
     plt.show()
 
+
 def excercise_volumes(df1, body_weight, selected_exercises, window=8):
     filtered_df = df1[(df1['Muscle group'] != 'Cardio') & (df1['Muscle group'] != 'Walk') & (df1['Exercise name'].isin(selected_exercises))].copy()
 
@@ -485,7 +503,7 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
     ax1.tick_params(axis='x', rotation=45)
     ax1.set_xlabel('')
     ax1.set_ylabel('Total Reps')
-    ax1.set_title('Total Reps Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
+    ax1.set_title('Total Reps Over Time', ha='left', fontsize=11, fontweight='normal', color=title_text_color, x=0)
 
     sns.barplot(
         data=top_exercises,
@@ -499,7 +517,7 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
 
     ax2.set_xlabel('')
     ax2.set_ylabel('Total Reps')
-    ax2.set_title('Total Reps Lifted Over Time', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=0)
+    ax2.set_title('Total Reps Lifted Over Time', ha='left', fontsize=11, fontweight='normal', color=title_text_color, x=0)
 
     table_data = top_exercises.reset_index()
     table = ax2.table(cellText=table_data.values, colLabels=table_data.columns, cellLoc='center', loc='bottom', bbox=[0, -0.5, 1, 0.34])
@@ -526,16 +544,17 @@ def excercise_volumes(df1, body_weight, selected_exercises, window=8):
         for spine in ax.spines.values():
             spine.set_edgecolor(border_color)
 
-    fig.text(0.95, 0.1, f'Gym Workout Analysis Q1 2024\nThis shows the total volumes I have lifted since 1st of January.\nI hope you like my charts and everything is clear.\nselected_exercises: {selected_exercises} were excluded.', ha='right', va='center', fontsize=10, fontweight='normal')
+    fig.text(0.55, 0.2, f'Even though the chest press workout in the line plot has the highest total repetitions, \nit is not the most exercised.\nBy looking at the triangle markers in the plot, we can see how many workouts took place.\nConsistency matters.', ha='left', va='center', fontsize=11, fontweight='normal')
     plt.gcf().canvas.manager.set_window_title('0X_Workout volumes (Gym_log_2024)')
     
     fig.suptitle('\nExercise Volumes View', fontsize=18, color=title_text_color)
-    fig.text(0.5, 0.90, '*Cardio workouts were exempt from the dataset.', ha='center', fontsize=8, style='italic')
+    fig.text(0.5, 0.87, f'*Cardio workouts were exempt from the dataset.\nSelected_exercises: {selected_exercises}.', ha='center', fontsize=8, style='italic')
 
     
     plt.subplots_adjust(hspace=-0.2, wspace=-0.1)
     plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
     plt.show()
+
 
 def consistency_view_table(df1) -> None:
 
@@ -603,7 +622,6 @@ def consistency_view_table(df1) -> None:
     )
     
     
-
     # Change the color of the confidence interval
     line = ax2.get_lines()[0]
     x_data = line.get_xdata()
@@ -619,18 +637,13 @@ def consistency_view_table(df1) -> None:
     ax2.set_title('Sum of Repetitions by Muscle Group chart', ha='left', fontsize=10, fontweight='bold', color=title_text_color, x=-0.3)
     ax2.get_legend().remove()
 
-
     
     colors = [highlight_color if place == 'Gym' else 
             color if place == 'Out' else 
             false_color if place == 'Home' else 
             'lightgrey' for place in df_months['Place']]
     
-
-
     
-    
-
     for key, cell in table1.get_celld().items():
         cell.set_edgecolor(border_color)
         cell.set_linewidth(0.2)
@@ -677,7 +690,6 @@ def consistency_view_table(df1) -> None:
     plt.subplots_adjust(hspace=-0.2, wspace=-0.1)
     plt.tight_layout(rect=[0.01, 0.05, 0.99, 0.95])
     plt.show()
-  
     
     
 def consistency_view(df1) -> None:
@@ -851,42 +863,31 @@ def consistency_view(df1) -> None:
 
     plt.show()
 
+
 def workout_details(df1) -> None:
     
-    df1 = df1[(df1['Muscle group'] != 'Cardio') & (df1['Muscle group'] != 'Walk')]
-    df1['Reps'] = df1['Reps'].fillna(1)
-    df1['Total_reps'] = df1['Sets'] * df1['Reps']
-
-
-    # Group by 'Date' and sum 'Total_reps'
+    df1 = df1[(df1['Muscle group'] != 'Cardio') & (df1['Muscle group'] != 'Walk')].copy()
+    df1.loc[:, 'Reps'] = df1['Reps'].fillna(1)
+    # df1['Total_reps'] = df1['Sets'] * df1['Reps']
+    df1.loc[:, 'Total_reps'] = df1['Sets'] * df1['Reps']
+    
     df1 = df1.groupby(['Date', 'Week'])['Total_reps'].sum().reset_index()
 
-    # Create a date range
+    # Create a date range to fill the gaps in time series
     date_range = pd.date_range(start=df1['Date'].min(), end=df1['Date'].max())
-
+    
     # Reindex the dataframe to include all dates in the range
     df1 = df1.set_index('Date').reindex(date_range).reset_index()
     df1.columns = ['Date', 'Week', 'Total_reps']
-
-    average_initial_reps = df1["Total_reps"].head(30).mean()
-    average_final_reps = df1["Total_reps"].tail(30).mean()
-
-    avg = df1["Total_reps"].mean()
-    print(f'AVG: {avg}')
-    max = df1["Total_reps"].max()
-    print(f'MAX: {max}')
 
     max_idx = df1["Total_reps"].idxmax()
     max_date = df1.loc[max_idx, 'Date']
     min_idx = df1["Total_reps"].idxmin()
     min_date = df1.loc[min_idx, 'Date']
-    print(f'max_date: {max_date}')
-
-
 
     # Highlight specific dates
-    highlight_date_1 = pd.Timestamp('2024-01-14')
-    highlight_date_2 = pd.Timestamp('2024-04-29')
+    highlight_date_1 = pd.Timestamp('')
+    highlight_date_2 = pd.Timestamp('')
     highlight_date_3 = max_date
     highlight_date_4 = min_date
     colors = ['lightgrey' if date == highlight_date_1 else 
@@ -895,48 +896,37 @@ def workout_details(df1) -> None:
             false_color if date == highlight_date_4 else 
             'lightgrey' for date in df1['Date']]
 
-    # Plotting
+
     fig, ax1 = plt.subplots(figsize=(15, 8))
 
-    # Create barplot
+    # AX1
     sns.barplot(ax=ax1, x=df1['Date'], y=df1['Total_reps'], hue=df1['Date'], palette=colors, width=1)
     ax1.xaxis.set_major_locator(mdates.DayLocator(interval=10))  # Change interval as needed
     plt.xticks(rotation=45)
 
-    # Set labels and title
     ax1.set_xlabel('')
     ax1.set_ylabel('Total reps', color=title_text_color, fontsize=10, weight='bold')
     ax1.set_title(f'Total reps over time', color=title_text_color, weight='bold', fontsize=16, loc='left')
     ax1.tick_params(axis='x', labelsize=8)
     ax1.tick_params(axis='y', labelsize=8)
-
-    # Set the background color
     ax1.set_facecolor(background_color)
 
-    # Create custom legend
-    
+
+    # Custom legend
     legend_handles = [
         Patch(color=highlight_color, label='Max'),
         Patch(color=false_color, label='Min')
     ]
     ax1.legend(handles=legend_handles, title='', edgecolor=border_color_2)
 
-    # Define the inset plot
     inset_ax = inset_axes(ax1, width="25%", height="15%", loc="lower left")  # Adjust width, height, and loc as needed
 
-    # Text plot data
-    text = f"Mean change in Total Reps:\non average"
-    inset_ax.text(0.05, 0.9, text, fontsize=8, color=title_text_color, ha='left', va='top')
+    text = f"According the trend line the workout\nvolumes are decreasing."
+    inset_ax.text(0.05, 0.9, text, fontsize=9, fontweight='bold', color=title_text_color, ha='left', va='top')
     inset_ax.set_xticks([])  # Remove x-ticks
     inset_ax.set_yticks([])  # Remove y-ticks
     inset_ax.patch.set_facecolor('white')
     inset_ax.patch.set_alpha(0.85)
-
-
-
-
-    # df['Total_reps'] = df['Total_reps'].dropna()
-    # df = df.dropna(subset=['Date'])
 
     sns_regplot = sns.regplot(x=np.arange(0, len(df1['Date'])), y=df1['Total_reps'], ax=ax1, marker='', color=color ,line_kws={
             'color': highlight_color,  # Line color
@@ -950,14 +940,13 @@ def workout_details(df1) -> None:
     df_x = df_x.groupby('Week')['Total_reps'].sum().reset_index()
     df_x['Change'] = df_x['Total_reps'].pct_change() * 100
     df_x = df_x.groupby('Week')['Change'].sum().reset_index()
-    print(df_x.head(30))
 
 
     df_x['Positive'] = df_x['Change'] >= 0
-    # Define the inset plot
+
     inset_ax2 = inset_axes(ax1, width="30%", height="15%", loc="upper left")  # Adjust width, height, and loc as needed
 
-    # Text plot data
+    # AX2
     text = sns.barplot(data=df_x, y=df_x['Change'], x=df_x['Week'], hue='Positive',palette={True: true_color, False: false_color}, dodge=False)
     inset_ax2.set_xlabel('')
     inset_ax2.set_ylabel('')
@@ -966,7 +955,7 @@ def workout_details(df1) -> None:
     inset_ax2.set_title('')
     inset_ax2.legend().remove()
     
-    # Add custom title inside the axes
+    # Custom title inside the axes
     inset_ax2.text(
         0.05, 0.92, 'Weekly change in sets volume',
         horizontalalignment='left',
@@ -991,35 +980,30 @@ def workout_details(df1) -> None:
         spine.set_edgecolor(border_color_2)
 
 
-
-    # inset_ax2.set_yticks([])  # Remove y-ticks
-    # inset_ax2.axhline(0, color="r", clip_on=False)
-
-
     plt.gcf().canvas.manager.set_window_title('0X_Workout details  (Gym_log_2024)')
-    # Show plot
     plt.show()
+
 
 def main():
     df1, df2 = load_data(file_path_1, file_path_2)
     if df1 is not None and df2 is not None:
         df1, df2 = data_preparation(df1, df2)
-
-             
-
-        excercise_volumes(df1, body_weight, selected_exercises) 
-        correlation_view(df2)     
-        day_of_the_week(df1)      
-        workout_details(df1) # DONE         
+        
+        
+        '''
+              
+        workout_details(df1)      
         sets_view(df1)
         consistency_view(df1)    
-        consistency_view_table(df1) # DONE  
-        
+        consistency_view_table(df1)           
+
+        excercise_volumes(df1, body_weight, selected_exercises) # DONE
+        day_of_the_week(df1) # DONE  
+        correlation_view(df2) # DONE
         body_values(df2) # DONE  
-        '''
-           
-
-
+        
+        
+        workout_details(df1)  # DONE 2
         '''
 
 
