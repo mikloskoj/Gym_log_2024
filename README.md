@@ -47,7 +47,7 @@ Analysis specifics?
 - Dip assist
 - Bench press
 - Pec fly
-- Lex extension
+- Leg extension
 - Mid row - one arm
 
 8. Check how reps per sets has changed in correlation to weight.
